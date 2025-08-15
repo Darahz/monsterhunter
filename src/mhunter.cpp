@@ -7,6 +7,7 @@
 #include <functional>
 #include <cctype>
 #include <algorithm>
+#include <ctime>
 
 #include <thread>
 #include <chrono>
@@ -16,6 +17,7 @@
 #include "../include/Recipes.h"
 #include "../include/Menu.h"
 #include "../include/World.h"
+#include "../include/SaveHandler.h"
 
 
 using namespace std;
@@ -106,7 +108,6 @@ void ChopWood(Player &_player){
     }
     Print("Press any key…"); getchar();
 }
-
 
 void OpenCraftingMenu(Player &_player) {
     // Extract recipe names into a vector
@@ -298,6 +299,143 @@ void OpenExplorationMenu(Player &_player, World &_world){
     }
 }
 
+void OpenLoadMenu(Player &_player, World &_world) {
+    auto saveFiles = SaveHandler::getSaveFiles();
+    if (saveFiles.empty()) {
+        ClearScreen();
+        Print("No save files found!", Color::Yellow);
+        Print("Press any key to continue...");
+        getchar();
+        return;
+    }
+    
+    saveFiles.push_back("Back");
+    Menu loadMenu(saveFiles);
+    
+    while (true) {
+        ClearScreen();
+        Print("== Load Game ==");
+        if (SaveHandler::hasActiveSave()) {
+            Print("Current active save: " + SaveHandler::getActiveSave(), Color::Cyan);
+        }
+        Print("Select a save file to load:");
+        Print("");
+        loadMenu.DisplayItems();
+        
+        int ch = getchar();
+        switch (ch) {
+            case 'w': case 'W':
+                loadMenu.MoveUp();
+                break;
+            case 's': case 'S':
+                loadMenu.MoveDown();
+                break;
+            case 'e': {
+                std::string selected = loadMenu.returnSelected();
+                if (selected == "Back") return;
+                
+                if (PrintYesNo("Load save: " + selected + "? Current progress will be lost!")) {
+                    if (SaveHandler::loadGame(_player, _world, selected)) {
+                        Print("Save loaded successfully!");
+                        Print("This is now your active save file.", Color::Cyan);
+                        Print("Press any key to continue...");
+                        getchar();
+                        return;
+                    }
+                }
+                break;
+            }
+            case 'q': case 'Q':
+                return;
+        }
+    }
+}
+
+void SaveHandlingMenu(Player &_player, World &_world){
+    _world.stop();
+    
+    std::vector<std::string> menuItems;
+    if (SaveHandler::hasActiveSave()) {
+        menuItems = {"Quick Save (" + SaveHandler::getActiveSave() + ")", "Save Game", "Load Game", "Back"};
+    } else {
+        menuItems = {"Save Game", "Load Game", "Back"};
+    }
+    
+    Menu SaveMenu(menuItems);
+    
+    unordered_map<string, function<void()>> actions{
+        {"Quick Save (" + SaveHandler::getActiveSave() + ")", [&]{
+            ClearScreen();
+            Print("Saving to: " + SaveHandler::getActiveSave());
+            if (SaveHandler::saveToActiveSave(_player, _world)) {
+                Print("Press any key to continue...");
+                getchar();
+            }
+        }},
+        {"Save Game", [&]{
+            ClearScreen();
+            Print("Enter save name (or press Enter for default):");
+            
+            // Get current time for default name
+            time_t now = time(0);
+            tm* ltm = localtime(&now);
+            char timeStr[100];
+            sprintf(timeStr, "Save_%04d%02d%02d_%02d%02d%02d", 
+                    1900 + ltm->tm_year, 1 + ltm->tm_mon, ltm->tm_mday,
+                    ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
+            
+            std::string saveName = timeStr;
+            Print("Save name: " + saveName);
+            
+            if (SaveHandler::saveGame(_player, _world, saveName)) {
+                Print("This is now your active save file.");
+                Print("Press any key to continue...");
+                getchar();
+            }
+        }},
+        {"Load Game", [&]{
+            OpenLoadMenu(_player, _world);
+        }},
+        {"Back", [&]{
+            // Do nothing, will exit loop
+        }}
+    };
+    
+    while (true) {
+        ClearScreen();
+        Print("== Data Management ==");
+        Print(_world.timeString());
+        _player.printHealth();
+        Print("");
+        SaveMenu.DisplayItems();
+        
+        int ch = getchar();
+        switch (ch) {
+            case 'w': case 'W':
+                SaveMenu.MoveUp();
+                break;
+            case 's': case 'S':
+                SaveMenu.MoveDown();
+                break;
+            case 'e':{
+                std::string selected = SaveMenu.returnSelected();
+                if (selected == "Back") {
+                    _world.start();
+                    return;
+                }
+                auto it = actions.find(selected);
+                if (it != actions.end()) it->second();
+                break;
+            }
+            case 'q': case 'Q':
+                _world.start();
+                return;
+            default:
+                break;
+        }
+    }
+}
+
 int main(){
     World _world;
     Player _player;
@@ -312,6 +450,7 @@ int main(){
         "Rest",
         "Inventory",
         "Craft",
+        "Data",
         "Exit"});
     Print(_world.timeString());
     Print("");
@@ -329,6 +468,8 @@ int main(){
         }},
         {"Inventory", [&]{
             OpenInventoryMenu(_player);
+        }},{"Data" , [&]{
+            SaveHandlingMenu(_player, _world);
         }},
         {"Craft", [&]{
             OpenCraftingMenu(_player);

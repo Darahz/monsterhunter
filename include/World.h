@@ -19,6 +19,7 @@ public:
     int  getDay()   const;
 
     void addHour(int hour);
+    void setDay(int day);
     void setTime(int hour, int minute);
 
     std::string timeString() const;  // e.g. "Day 3 14:07"

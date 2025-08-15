@@ -58,3 +58,12 @@ void World::runLoop_() {
 void World::addHour(int hour){
     this->hour_ += hour;
 }
+
+void World::setDay(int day){
+    this->day_ = day;
+}
+
+void World::setTime(int hour, int minute){
+    this->hour_ = hour;
+    this->minute_ = minute;
+}

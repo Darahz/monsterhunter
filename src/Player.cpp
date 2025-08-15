@@ -102,3 +102,11 @@ void Player::printHealth(){
         Print("Health : " + std::to_string(iHealth), Color::Red);
     }
 }
+
+void Player::setHealth(int h) {
+    iHealth = std::max(0, std::min(100, h));
+}
+
+void Player::clearInventory() {
+    inventory.clearInventory();
+}

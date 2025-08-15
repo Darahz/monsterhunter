@@ -62,3 +62,7 @@ bool Inventory::equipItem(std::string name) {
     equipped = key; // normalize to lowercase internally
     return true;
 }
+
+void Inventory::clearInventory(){
+    this->items.clear();
+}

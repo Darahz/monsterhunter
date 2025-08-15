@@ -13,6 +13,7 @@ public:
     void addItem(std::string name, int num);
     void removeItem(std::string name, int amt = 1);
     void listItems() const;
+    void clearInventory();
     
     int getItemCount(std::string name) const;
     bool hasItem(std::string name) const;

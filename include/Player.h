@@ -23,6 +23,7 @@ public:
 
     int  getItemCount(std::string name) { return inventory.getItemCount(name); }
     bool hasItem(std::string name) { return inventory.hasItem(name); }
+    void clearInventory();
 
     std::vector<std::pair<std::string,int>> getInventoryList() const { return inventory.getItemsList(); }
 
@@ -36,4 +37,5 @@ public:
     void rest(World& world);
     void printHealth();
     int getHealth() const { return iHealth; }
+    void setHealth(int h);
 };
