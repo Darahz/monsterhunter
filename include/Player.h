@@ -35,4 +35,5 @@ public:
     void AddHealth(int iAdd);
     void rest(World& world);
     void printHealth();
+    int getHealth() const { return iHealth; }
 };
