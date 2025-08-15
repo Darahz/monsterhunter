@@ -40,6 +40,74 @@ struct RawMode {
     }
 };
 
+void ChopWood(Player &_player){
+    bool hasAxe       = _player.getEquipped() == "Axe";
+    bool hasAxeHandle = _player.getEquipped() == "Axe handle";
+    int totalWood = 0;
+
+    if (hasAxe) {
+        // Axe: efficient chopping
+        int rndNum = getRandomNum(2,5);
+        for (int i = 0; i < rndNum; i++) {
+            int numLumber = getRandomNum(2,4);
+            Print("You swing the axe!");
+            PrintDot(3);
+            Print(std::string("You've gained ") + std::to_string(numLumber) + " wood!");
+            sleep(1);
+            totalWood += numLumber;
+        }
+    }
+    else if (hasAxeHandle) {
+        // Axe Handle: works, but worse than a full axe
+        int rndNum = getRandomNum(1,5);
+        for (int i = 0; i < rndNum; i++) {
+            int numLumber = getRandomNum(1,3);
+            Print("You bonked the tree with the Axe Handle!");
+            PrintDot(3);
+            if(getRandomNum(1,100) <= 15){
+                Print("The handle kicked back and hit you in the face... Ouch", Color::Red);
+                _player.TakeHealth(getRandomNum(1,4));
+            }
+            sleep(1);
+            Print(std::string("You've gained ") + std::to_string(numLumber) + " wood!");
+            sleep(1);
+            totalWood += numLumber;
+        }
+    }
+    else {
+        // Bare hands (or head): prompt + worst yields
+        bool yn = PrintYesNo("You don't have an axe. Are you sure you want to continue?");
+        if (!yn) return;
+        ClearScreen();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        Print("You decided to continue with your plan!... To get that wood");
+        PrintDot(3, 250);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        int rndNum = getRandomNum(1,5);
+        for (int i = 0; i < rndNum; i++) {
+            int numLumber = getRandomNum(1,3);
+            Print("You slammed your head into the tree!");
+            PrintDot(3);
+            _player.TakeHealth(getRandomNum(1,3));
+            sleep(1);
+            Print(std::string("You've gained ") + std::to_string(numLumber) + " wood!");
+            sleep(1);
+            totalWood += numLumber;
+        }
+    }
+
+    ClearScreen();
+    _player.addItem("Wood", totalWood);
+    Print(std::string("Managed to get ") + std::to_string(totalWood) + "x wood.");
+    if(getRandomNum(1,100) <= 35){
+        _player.addItem("Apple", totalWood);
+        Print(std::string("And ") + std::to_string(5) + "x Apples.");
+    }
+    Print("Press any key…"); getchar();
+}
+
+
 void OpenCraftingMenu(Player &_player) {
     // Extract recipe names into a vector
     std::vector<std::string> craftables;
@@ -173,7 +241,7 @@ void OpenInventoryMenu(Player &_player) {
 }
 
 void OpenExplorationMenu(Player &_player, World &_world){
-    Menu exploreMenu({"Look around"});
+    Menu exploreMenu({"Fight", "Chop wood", "Look around"});
     ClearScreen();
     unordered_map<string, function<void()>> actions{
         {"Look around", [&]{
@@ -195,6 +263,9 @@ void OpenExplorationMenu(Player &_player, World &_world){
                 PrintDot(3,250);
             }
             Print("Press any key…"); getchar();
+        }},
+        {"Chop wood", [&]{
+            ChopWood(_player);
         }},
     };
     while (true) {
@@ -227,73 +298,6 @@ void OpenExplorationMenu(Player &_player, World &_world){
     }
 }
 
-void ChopWood(Player &_player){
-    bool hasAxe       = _player.getEquipped() == "Axe";
-    bool hasAxeHandle = _player.getEquipped() == "Axe handle";
-    int totalWood = 0;
-
-    if (hasAxe) {
-        // Axe: efficient chopping
-        int rndNum = getRandomNum(2,5);
-        for (int i = 0; i < rndNum; i++) {
-            int numLumber = getRandomNum(2,4);
-            Print("You swing the axe!");
-            PrintDot(3);
-            Print(std::string("You've gained ") + std::to_string(numLumber) + " wood!");
-            sleep(1);
-            totalWood += numLumber;
-        }
-    }
-    else if (hasAxeHandle) {
-        // Axe Handle: works, but worse than a full axe
-        int rndNum = getRandomNum(1,5);
-        for (int i = 0; i < rndNum; i++) {
-            int numLumber = getRandomNum(1,3);
-            Print("You bonked the tree with the Axe Handle!");
-            PrintDot(3);
-            if(getRandomNum(1,100) <= 15){
-                Print("The handle kicked back and hit you in the face... Ouch", Color::Red);
-                _player.TakeHealth(getRandomNum(1,4));
-            }
-            sleep(1);
-            Print(std::string("You've gained ") + std::to_string(numLumber) + " wood!");
-            sleep(1);
-            totalWood += numLumber;
-        }
-    }
-    else {
-        // Bare hands (or head): prompt + worst yields
-        bool yn = PrintYesNo("You don't have an axe. Are you sure you want to continue?");
-        if (!yn) return;
-        ClearScreen();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        Print("You decided to continue with your plan!... To get that wood");
-        PrintDot(3, 250);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-        int rndNum = getRandomNum(1,5);
-        for (int i = 0; i < rndNum; i++) {
-            int numLumber = getRandomNum(1,3);
-            Print("You slammed your head into the tree!");
-            PrintDot(3);
-            _player.TakeHealth(getRandomNum(1,3));
-            sleep(1);
-            Print(std::string("You've gained ") + std::to_string(numLumber) + " wood!");
-            sleep(1);
-            totalWood += numLumber;
-        }
-    }
-
-    ClearScreen();
-    _player.addItem("Wood", totalWood);
-    Print(std::string("Managed to get ") + std::to_string(totalWood) + "x wood.");
-    if(getRandomNum(1,100) <= 35){
-        _player.addItem("Apple", totalWood);
-        Print(std::string("And ") + std::to_string(5) + "x Apples.");
-    }
-    Print("Press any key…"); getchar();
-}
-
 int main(){
     World _world;
     Player _player;
@@ -304,9 +308,7 @@ int main(){
     HideCursor();
     ClearScreen();
     Menu menu({
-        "Fight",
         "Explore",
-        "Chop wood",
         "Rest",
         "Inventory",
         "Craft",
@@ -317,13 +319,8 @@ int main(){
 
     
     unordered_map<string, function<void()>> actions{
-        {"Fight", [&]{
-
-        }},{"Explore", [&]{
+        {"Explore", [&]{
             OpenExplorationMenu(_player, _world);
-        }},
-        {"Chop wood", [&]{
-            ChopWood(_player);
         }},
         {"Rest", [&]{
             if(PrintYesNo("This will forward the time to 08:00 next day, do you want to continue?")){
