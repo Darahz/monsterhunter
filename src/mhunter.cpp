@@ -304,6 +304,59 @@ void OpenExplorationMenu(Player &_player, World &_world){
     }
 }
 
+void OpenPlayerMenu(Player &_player, World &_world){
+    Menu playerMenu({"Inventory", "Equipped Item", "Craft", "Rest"});
+    ClearScreen();
+    unordered_map<string, function<void()>> actions{
+        {"Inventory", [&]{
+            OpenInventoryMenu(_player);
+        }},
+        {"Equipped Item", [&]{
+            ClearScreen();
+            Print("== Equipped Item ==");
+            if (_player.getEquipped().empty()) {
+                Print("You have no item equipped.", Color::Red);
+            }else {
+                Print("You have equipped: " + _player.getEquipped(), Color::Green);
+            }
+            Print("Press any key…"); getchar();
+        }},
+        {"Craft", [&]{
+            OpenCraftingMenu(_player);
+        }},
+        {"Rest", [&]{
+            if(PrintYesNo("This will forward the time to 08:00 next day, do you want to continue?")){
+                _player.rest(_world);
+            }
+        }},
+    };
+    while (true) {
+        ClearScreen();
+        Print("== Player ==");
+        Print(_world.timeString());
+        Print("");
+        playerMenu.DisplayItems();
+        int ch = getchar();
+        switch (ch) {
+            case 'w': case 'W':
+                playerMenu.MoveUp();
+                break;
+            case 's': case 'S':
+                playerMenu.MoveDown();
+                break;
+            case 'e':{
+                auto it = actions.find(playerMenu.returnSelected());
+                if (it != actions.end()) it->second();
+                break;
+            }
+            case 'q': case 'Q':
+                return;
+            default:
+                break;
+        }
+    }
+}
+
 void OpenLoadMenu(Player &_player, World &_world) {
     auto saveFiles = SaveHandler::getSaveFiles();
     if (saveFiles.empty()) {
@@ -452,9 +505,7 @@ int main(){
     ClearScreen();
     Menu menu({
         "Explore",
-        "Rest",
-        "Inventory",
-        "Craft",
+        "Player",
         "Data",
         "Exit"});
     Print(_world.timeString());
@@ -467,18 +518,10 @@ int main(){
         {"Explore", [&]{
             OpenExplorationMenu(_player, _world);
         }},
-        {"Rest", [&]{
-            if(PrintYesNo("This will forward the time to 08:00 next day, do you want to continue?")){
-                _player.rest(_world);
-            }
-        }},
-        {"Inventory", [&]{
-            OpenInventoryMenu(_player);
+        {"Player", [&]{
+            OpenPlayerMenu(_player, _world);
         }},{"Data" , [&]{
             SaveHandlingMenu(_player, _world);
-        }},
-        {"Craft", [&]{
-            OpenCraftingMenu(_player);
         }},
         {"Exit", [&]{
             ShowCursor();
