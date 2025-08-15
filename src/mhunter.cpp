@@ -78,7 +78,12 @@ void ChopWood(Player &_player){
     }
     else {
         // Bare hands (or head): prompt + worst yields
-        bool yn = PrintYesNo("You don't have an axe. Are you sure you want to continue?");
+        bool invHasAxe = _player.hasItem("Axe");
+        string axeMsg = "Do you want to use your bare hands to chop wood?";
+        if (invHasAxe) {
+            axeMsg = "You have a axe. But you haven't equipped it. Do you want to use your bare hands to chop wood?";
+        }
+        bool yn = PrintYesNo(axeMsg);
         if (!yn) return;
         ClearScreen();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
