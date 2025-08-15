@@ -453,6 +453,7 @@ int main(){
         "Data",
         "Exit"});
     Print(_world.timeString());
+    _player.printHealth();
     Print("");
     menu.DisplayItems();
 
