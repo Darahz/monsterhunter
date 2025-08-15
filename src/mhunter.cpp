@@ -95,7 +95,6 @@ static std::vector<std::string> BuildInventoryItems(Player& _player) {
 }
 
 void OpenInventoryMenu(Player &_player) {
-    // build once
     auto items = BuildInventoryItems(_player);
     Menu invMenu(items);
 
@@ -122,7 +121,6 @@ void OpenInventoryMenu(Player &_player) {
                 std::string sel = invMenu.returnSelected();
                 if (sel == "Back") return;
 
-                // Extract raw item name before " xN"
                 auto pos = sel.find(" x");
                 std::string itemName = (pos == std::string::npos) ? sel : sel.substr(0, pos);
 
@@ -179,7 +177,25 @@ void OpenExplorationMenu(Player &_player, World &_world){
     ClearScreen();
     unordered_map<string, function<void()>> actions{
         {"Look around", [&]{
-
+            int rndNum = getRandomNum(1,5);
+            if(rndNum <= 2){
+                Print("You look around");
+                PrintDot(3);
+                Print("You see nothing out of the ordinary. But you did spot a nice shiny stone!");
+                _player.addItem("Stone", getRandomNum(1,2));
+                if(getRandomNum(0,100) <= 25){
+                    PrintDot(3,250);
+                    Print("It's really sharp!");
+                    PrintDot(3);
+                    _player.TakeHealth(2);
+                }
+                Print("Press any key…"); getchar();
+            }else{
+                PrintDot(3,250);
+                Print("You see a big lake in front of you. The birds are singing a beautiful song");
+                PrintDot(3,250);
+            }
+            PrintDot(3);
         }},
     };
     while (true) {
@@ -224,7 +240,6 @@ void ChopWood(Player &_player){
             int numLumber = getRandomNum(2,4);
             Print("You swing the axe!");
             PrintDot(3);
-            // maybe less/no damage with a real axe
             Print(std::string("You've gained ") + std::to_string(numLumber) + " wood!");
             sleep(1);
             totalWood += numLumber;
