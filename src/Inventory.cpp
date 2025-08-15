@@ -5,7 +5,7 @@
 Inventory::Inventory() {}
 
 void Inventory::addItem(std::string name, int num) {
-    name = toLower(name); // normalize
+    name = toFirstUpper(name); // normalize
     if(this->items.count(name)){
         this->items[name] += num;
     } else {
@@ -24,7 +24,7 @@ void Inventory::listItems() const {
 }
 
 int Inventory::getItemCount(std::string name) const {
-    name = toLower(name); // normalize
+    name = toFirstUpper(name); // normalize
     if(this->items.count(name)){
         return this->items.at(name);
     }
@@ -32,17 +32,17 @@ int Inventory::getItemCount(std::string name) const {
 }
 
 bool Inventory::hasItem(std::string name) const {
-    name = toLower(name); // normalize
+    name = toFirstUpper(name); // normalize
     return this->items.count(name) > 0 && this->items.at(name) > 0;
 }
 
 void Inventory::removeItem(std::string name, int amt) {
-    name = toLower(name);
+    name = toFirstUpper(name);
     if (!items.count(name)) return;
     items[name] -= amt;
     if (items[name] <= 0) {
         items.erase(name);
-        if (toLower(equipped) == name) equipped.clear(); // auto-unequip if gone
+        if (toFirstUpper(equipped) == name) equipped.clear(); // auto-unequip if gone
     }
 }
 
@@ -56,7 +56,7 @@ std::vector<std::pair<std::string,int>> Inventory::getItemsList() const {
 }
 
 bool Inventory::equipItem(std::string name) {
-    std::string key = toLower(name);
+    std::string key = toFirstUpper(name);
     auto it = items.find(key);
     if (it == items.end() || it->second <= 0) return false;
     equipped = key; // normalize to lowercase internally

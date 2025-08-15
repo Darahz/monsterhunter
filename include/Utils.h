@@ -22,6 +22,8 @@ void SetColor(Color c);
 
 std::string toLower(const std::string &s);
 
+std::string toFirstUpper(const std::string &s);
+
 void Print(const std::string &str, Color c = Color::Default);
 
 void PrintDot(int sleeper, int sleepTime = 150, Color c = Color::Default);

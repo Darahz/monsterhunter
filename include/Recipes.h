@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include <string>
 
-// keep everything lowercase so it matches your toLower() inventory keys
+// Recipe names will be normalized with toFirstUpper() in the inventory
 using Recipe = std::unordered_map<std::string,int>;
 
 inline const std::unordered_map<std::string, Recipe> RECIPES = {
