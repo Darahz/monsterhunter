@@ -34,4 +34,5 @@ public:
     void TakeHealth(int iRemoval);
     void AddHealth(int iAdd);
     void rest(World& world);
+    void printHealth();
 };

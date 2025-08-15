@@ -92,3 +92,13 @@ void Player::AddHealth(int iAdd){
     Print("You've gained " + std::to_string(iAdd) +
         " health " + std::to_string(this->iHealth) + "/100", Color::Green);
 }
+
+void Player::printHealth(){
+    if(iHealth >= 75){
+        Print("Health : " + std::to_string(iHealth), Color::Green);
+    } else if(iHealth >= 25){
+        Print("Health : " + std::to_string(iHealth), Color::Yellow);
+    } else {
+        Print("Health : " + std::to_string(iHealth), Color::Red);
+    }
+}

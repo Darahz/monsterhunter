@@ -368,6 +368,7 @@ int main(){
 
         ClearScreen();
         Print(_world.timeString());
+        _player.printHealth();
         Print("");
         menu.DisplayItems();
         if (_world.isNight()) {
