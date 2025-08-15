@@ -264,7 +264,7 @@ void ChopWood(Player &_player){
     }
     else {
         // Bare hands (or head): prompt + worst yields
-        bool yn = PrintYesNo("You don't have an axe. Are you sure you want to continue? [Y/N]");
+        bool yn = PrintYesNo("You don't have an axe. Are you sure you want to continue?");
         if (!yn) return;
         ClearScreen();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -327,7 +327,9 @@ int main(){
             ChopWood(_player);
         }},
         {"Rest", [&]{
-            _player.rest(_world);
+            if(PrintYesNo("This will forward the time to 08:00 next day, do you want to continue?")){
+                _player.rest(_world);
+            }
         }},
         {"Inventory", [&]{
             OpenInventoryMenu(_player);
