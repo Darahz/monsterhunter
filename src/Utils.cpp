@@ -22,6 +22,19 @@ std::string toLower(const std::string &s) {
     return out;
 }
 
+std::string toFirstUpper(const std::string &s) {
+    if (s.empty()) return s; // handle empty string
+
+    std::string out = s;
+    // make all lower
+    std::transform(out.begin(), out.end(), out.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+
+    // uppercase the first character
+    out[0] = static_cast<char>(std::toupper(out[0]));
+    return out;
+}
+
 void Print(const std::string &str, Color c) {
     SetColor(c);
     std::cout << str << std::endl;
