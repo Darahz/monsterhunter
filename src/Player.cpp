@@ -72,8 +72,6 @@ void Player::rest(World& world){
     getchar();
 }
 
-
-
 bool Player::isDead(){
     return this->iHealth <= 0;
 }
