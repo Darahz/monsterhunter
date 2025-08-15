@@ -53,6 +53,7 @@ void PrintDot(int sleeper, int sleepTime, Color c) {
 }
 
 bool PrintYesNo(string message){
+    ClearScreen();
     Print(message + " [Y/N]");
     int ch = getchar();
     return ch == 'Y' || ch == 'y';
