@@ -503,6 +503,7 @@ int main(){
                 break;
             }
             case 'q': case 'Q':
+                ShowCursor();
                 return 0;
             default:
                 break;
