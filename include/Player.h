@@ -1,37 +1,33 @@
 // Player.h
 #pragma once
 #include <string>
-#include <unordered_map>
-#include <vector>
 #include <thread>
 #include <chrono>
 #include <termios.h>
 #include <unistd.h>
+#include "Inventory.h"
 
 class World; // forward declare
 
 class Player {
 private:
     std::string sName;
-    std::unordered_map<std::string,int> inventory;
+    Inventory inventory;
     int iHealth = 100;
-    std::string equipped; // empty = nothing equipped
 
 public:
     Player();
-    void addItem(std::string name, int num);
-    void removeItem(std::string name, int amt = 1);
-    void listInventory();
+    void addItem(std::string name, int num) { inventory.addItem(name, num); }
+    void removeItem(std::string name, int amt = 1) { inventory.removeItem(name, amt); }
+    void listInventory() { inventory.listItems(); }
 
-    int  getItemCount(std::string name);
-    bool hasItem(std::string name);
+    int  getItemCount(std::string name) { return inventory.getItemCount(name); }
+    bool hasItem(std::string name) { return inventory.hasItem(name); }
 
-    // NEW: expose a snapshot for menus (name,count)
-    std::vector<std::pair<std::string,int>> getInventoryList() const;
+    std::vector<std::pair<std::string,int>> getInventoryList() const { return inventory.getItemsList(); }
 
-    // NEW: equip helpers
-    bool equipItem(std::string name);
-    std::string getEquipped() const { return equipped; }
+    bool equipItem(std::string name) { return inventory.equipItem(name); }
+    std::string getEquipped() const { return inventory.getEquipped(); }
 
     bool craftItem(std::string itemName);
     bool isDead();

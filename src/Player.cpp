@@ -5,65 +5,6 @@
 
 Player::Player() {}
 
-void Player::addItem(std::string name, int num){
-    name = toLower(name); // normalize
-    if(this->inventory.count(name)){
-        this->inventory[name] += num;
-    } else {
-        this->inventory[name] = num;
-    }
-}
-
-void Player::listInventory() {
-    if (inventory.empty()) {
-        std::cout << "Inventory is empty!" << std::endl;
-        return;
-    }
-    for (const auto &item : inventory) {
-        std::cout << item.first << ": " << item.second << std::endl;
-    }
-}
-
-int Player::getItemCount(std::string name){
-    name = toLower(name); // normalize
-    if(this->inventory.count(name)){
-        return this->inventory[name];
-    }
-    return 0;
-}
-
-bool Player::hasItem(std::string name){
-    name = toLower(name); // normalize
-    return this->inventory.count(name) > 0 && this->inventory.at(name) > 0;
-}
-
-void Player::removeItem(std::string name, int amt) {
-    name = toLower(name);
-    if (!inventory.count(name)) return;
-    inventory[name] -= amt;
-    if (inventory[name] <= 0) {
-        inventory.erase(name);
-        if (toLower(equipped) == name) equipped.clear(); // auto-unequip if gone
-    }
-}
-
-std::vector<std::pair<std::string,int>> Player::getInventoryList() const {
-    std::vector<std::pair<std::string,int>> out;
-    out.reserve(inventory.size());
-    for (const auto &kv : inventory) {
-        out.emplace_back(kv.first, kv.second);
-    }
-    return out;
-}
-
-bool Player::equipItem(std::string name) {
-    std::string key = toLower(name);
-    auto it = inventory.find(key);
-    if (it == inventory.end() || it->second <= 0) return false;
-    equipped = key; // normalize to lowercase internally
-    return true;
-}
-
 bool Player::craftItem(std::string itemName){
     auto it = RECIPES.find(itemName);
     if (it == RECIPES.end()) {
@@ -72,30 +13,26 @@ bool Player::craftItem(std::string itemName){
     }
     const auto &needs = it->second;
 
+    // Check if we have all ingredients
     for (const auto &req : needs) {
         const std::string &reqName = req.first;
         int reqAmt = req.second;
-        int have = getItemCount(reqName);
+        int have = inventory.getItemCount(reqName);
         if (have < reqAmt) {
             std::cout << "Missing " << reqName << " x" << (reqAmt - have) << std::endl;
             return false;
         }
     }
 
-    // 3) Consume ingredients
+    // Consume ingredients
     for (const auto &req : needs) {
         const std::string &reqName = req.first;
         int reqAmt = req.second;
-
-        // Safe subtract: we know the key exists & count is enough
-        inventory[reqName] -= reqAmt;
-        if (inventory[reqName] <= 0) {
-            inventory.erase(reqName);
-        }
+        inventory.removeItem(reqName, reqAmt);
     }
 
-    // 4) Give the crafted item (1 by default)
-    addItem(itemName, 1);
+    // Give the crafted item (1 by default)
+    inventory.addItem(itemName, 1);
     std::cout << "Crafted: " << itemName << "!" << std::endl;
     return true;
 }
