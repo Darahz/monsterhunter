@@ -74,7 +74,7 @@ void OpenCraftingMenu(Player &_player) {
                 } else {
                     std::cout << "Failed to craft " << choice << "!" << std::endl;
                 }
-                sleep(2);
+                Print("Press any key…"); getchar();
                 break;
             }
             case 'q': case 'Q':
@@ -189,13 +189,12 @@ void OpenExplorationMenu(Player &_player, World &_world){
                     PrintDot(3);
                     _player.TakeHealth(2);
                 }
-                Print("Press any key…"); getchar();
             }else{
                 PrintDot(3,250);
                 Print("You see a big lake in front of you. The birds are singing a beautiful song");
                 PrintDot(3,250);
             }
-            PrintDot(3);
+            Print("Press any key…"); getchar();
         }},
     };
     while (true) {
@@ -292,7 +291,7 @@ void ChopWood(Player &_player){
         _player.addItem("Apple", totalWood);
         Print(std::string("And ") + std::to_string(5) + "x Apples.");
     }
-    sleep(3);
+    Print("Press any key…"); getchar();
 }
 
 int main(){
