@@ -1,4 +1,4 @@
-/build/*
-/.backup/*
-/.vscode/*
-/.saves/*
+/build/
+/.backup/
+/.vscode/
+/.saves/
