@@ -18,6 +18,7 @@ public:
 private:
     sf::RenderWindow window;
     sf::Font font;
+    // Just use todays date cuz im lazy
     int majorVersion = 8;
     int minorVersion = 18;
     int patchVersion = 0;
