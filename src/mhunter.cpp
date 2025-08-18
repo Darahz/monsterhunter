@@ -17,6 +17,8 @@ int main(){
     while (window.isOpen()) {
         window.update();
         window.render();
+        player.update();
+        player.render();
     }
 
     return 0;

@@ -1,15 +1,20 @@
 #include "../include/Player.h"
 
 Player::Player() {
+    this->timeAlive = 0.0f;
     this->setName("Darahz");
+    clock.restart();
 }
 
-Player::~Player() {}
+Player::~Player() {
+    std::cout << "Player destructor called for: " << this->getName() << std::endl;
+    std::cout << "Time Alive: " << this->timeAlive << " seconds" << std::endl;
+}
 
 void Player::update() {
-    // Update player state
+    this->timeAlive = clock.getElapsedTime().asSeconds();
 }
 
 void Player::render() {
-    // Render player
+    
 }
