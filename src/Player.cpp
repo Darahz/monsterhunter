@@ -41,10 +41,10 @@ bool Player::craftItem(std::string itemName){
 void Player::rest(World& world){
     ClearScreen();
 
-    if (this->hasItem("Apple")){
+    if (hasItem("Apple")){
         Print("You ate an apple before bedtime");
-        this->AddHealth(15);
-        this->removeItem("Apple");
+        AddHealth(15);
+        removeItem("Apple");
     } else {
         Print("You don't have an apple");
     }
@@ -65,7 +65,7 @@ void Player::rest(World& world){
     }
 
     Print("You wake up at 08:00 feeling rested!");
-    this->AddHealth(30);
+    AddHealth(30);
 
     tcflush(STDIN_FILENO, TCIFLUSH);
     Print("Press any key to continue...");
@@ -73,24 +73,24 @@ void Player::rest(World& world){
 }
 
 bool Player::isDead(){
-    return this->iHealth <= 0;
+    return iHealth <= 0;
 }
 
 void Player::TakeHealth(int iRemoval){
-    if(this->iHealth - iRemoval <= 0){
+    if(iHealth - iRemoval <= 0){
         Print("You died...");
     }else{
-        this->iHealth -= iRemoval;
-        int curHealth = this->iHealth;
+        iHealth -= iRemoval;
+        int curHealth = iHealth;
         Print(std::string("You've lost ") + std::to_string(iRemoval) + std::string(" health ") + std::to_string(curHealth) + std::string("/100"), Color::Red);
     }
 }
 
 void Player::AddHealth(int iAdd){
-    this->iHealth += iAdd;
-    if (this->iHealth > 100) this->iHealth = 100;
+    iHealth += iAdd;
+    if (iHealth > 100) iHealth = 100;
     Print("You've gained " + std::to_string(iAdd) +
-        " health " + std::to_string(this->iHealth) + "/100", Color::Green);
+        " health " + std::to_string(iHealth) + "/100", Color::Green);
 }
 
 void Player::printHealth(){

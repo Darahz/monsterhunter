@@ -6,15 +6,11 @@
 #include <termios.h>
 #include <unistd.h>
 #include "Inventory.h"
+#include "Creature.h"
 
 class World; // forward declare
 
-class Player {
-private:
-    std::string sName;
-    Inventory inventory;
-    int iHealth = 100;
-
+class Player : public Creature {
 public:
     Player();
     void addItem(std::string name, int num) { inventory.addItem(name, num); }
@@ -31,11 +27,11 @@ public:
     std::string getEquipped() const { return inventory.getEquipped(); }
 
     bool craftItem(std::string itemName);
-    bool isDead();
-    void TakeHealth(int iRemoval);
-    void AddHealth(int iAdd);
+    bool isDead() override;
+    void TakeHealth(int iRemoval) override;
+    void AddHealth(int iAdd) override;
     void rest(World& world);
-    void printHealth();
+    void printHealth() override;
     int getHealth() const { return iHealth; }
     void setHealth(int h);
 };
