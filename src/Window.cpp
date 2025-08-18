@@ -9,8 +9,13 @@ Window::~Window() {
     
 }
 
+std::string Window::getVersion() const {
+    return std::to_string(majorVersion) + "." + std::to_string(minorVersion) + "." + std::to_string(patchVersion);
+}
+
 bool Window::initialize() {
-    window.create(sf::VideoMode(800, 600), "Monster Hunter");
+
+    window.create(sf::VideoMode(800, 600), "Monster Hunter v." + this->getVersion());
     return window.isOpen();
 }
 
