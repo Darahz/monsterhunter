@@ -13,6 +13,10 @@ Player::~Player() {
 
 void Player::update() {
     this->timeAlive = clock.getElapsedTime().asSeconds();
+
+    for (auto& injury : injuries) {
+        injury.update();
+    }
 }
 
 void Player::render() {
