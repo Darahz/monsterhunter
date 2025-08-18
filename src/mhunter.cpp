@@ -5,8 +5,6 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <functional>
-#include <cctype>
-#include <algorithm>
 #include <ctime>
 
 #include <thread>

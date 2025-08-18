@@ -1,4 +1,5 @@
 #include "../include/Menu.h"
+#include <iostream>
 
 Menu::Menu(vector<string> items) {
     this->menuItems = items;

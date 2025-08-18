@@ -1,4 +1,10 @@
 #include "../include/Utils.h"
+#include <iostream>
+#include <algorithm>
+#include <thread>
+#include <chrono>
+#include <cstdlib>
+#include <cctype>
 
 void SetColor(Color c) {
     switch (c) {

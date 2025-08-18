@@ -3,7 +3,6 @@
 #include <atomic>
 #include <mutex>
 #include <string>
-#include <chrono>
 
 class World {
 public:

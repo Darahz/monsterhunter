@@ -1,11 +1,6 @@
 // Player.h
 #pragma once
 #include <string>
-#include <thread>
-#include <chrono>
-#include <termios.h>
-#include <unistd.h>
-#include "Inventory.h"
 #include "Creature.h"
 
 class World; // forward declare

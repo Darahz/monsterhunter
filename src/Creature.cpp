@@ -1,5 +1,6 @@
 #include "../include/Creature.h"
 #include "../include/Utils.h"
+#include <iostream>
 
 Creature::Creature() {}
 

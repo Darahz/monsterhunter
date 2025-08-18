@@ -1,11 +1,6 @@
 // Creature.h
 #pragma once
 #include <string>
-#include <thread>
-#include <chrono>
-#include <termios.h>
-#include <unistd.h>
-#include <iostream>
 #include "Inventory.h"
 
 class World;
