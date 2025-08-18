@@ -4,6 +4,12 @@ Inventory::Inventory() {}
 
 Inventory::~Inventory() {}
 
+void Inventory::drawInventory() {
+    for (const auto& item : items) {
+        std::cout << "Drawing item: " << item.getName() << " with value: " << item.getValue() << std::endl;
+    }
+}
+
 void Inventory::addItem(const Item& item) {
     items.push_back(item);
 }

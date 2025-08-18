@@ -9,6 +9,7 @@ public:
 
     void addItem(const Item& item);
     void removeItem(const Item& item);
+    void drawInventory();
     void clear();
 
     std::vector<Item> getItems() const;
