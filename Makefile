@@ -1,6 +1,6 @@
 CXX       := g++
 CXXFLAGS  := -Wall -Wextra -std=c++17 -Iinclude
-LDFLAGS   := -lpthread
+LDFLAGS   := -lpthread -lsfml-graphics -lsfml-window -lsfml-system
 BUILD_DIR := build
 SRC_DIR   := src
 INC_DIR   := include
