@@ -3,6 +3,7 @@
 #include "../include/Player.h"
 #include "../include/Button.h"
 #include "../include/Weather.h"
+#include "../include/Screeneffects.h"
 
 #include <unistd.h>
 
@@ -10,6 +11,7 @@ int main(){
     Window window;
     Player player;
     Weather weather;
+    ScreenEffects screenEffects;
     weather.setWeatherType(WeatherType::Snow);
     
 
@@ -20,9 +22,9 @@ int main(){
     Button startButton("Start Game", window.font, 24);
     startButton.setPosition(200, 200);
     startButton.setCallback([&]() {
-        std::cout << "Start Game button clicked!" << std::endl;
     });
 
+    screenEffects.startFadeIn(10.0f);
     while (window.isOpen()) {
         sf::Event event;
         while (window.window.pollEvent(event)) {
@@ -33,12 +35,14 @@ int main(){
         }
         
         player.update();
+        screenEffects.update(0.1f / 240.0f);
         
         window.clear();
         weather.update(0.1f / 240.0f);
         weather.draw(window.window);
         startButton.render(window.window);
         player.render();
+        screenEffects.fadeIn(window.window);  // Draw fade effect on top
         
         window.render();
     }
