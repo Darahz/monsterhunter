@@ -32,6 +32,8 @@ private:
     std::vector<Snowflake> snowflakes;
     float windowWidth;
     float windowHeight;
+    float topGap;
+    float bottomGap;
     float snowSpawnTimer;
     float snowSpawnRate;
     

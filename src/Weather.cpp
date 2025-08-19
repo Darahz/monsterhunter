@@ -3,6 +3,7 @@
 #include <cmath>
 
 Weather::Weather() : currentWeather(WeatherType::None), windowWidth(800), windowHeight(600),
+                     topGap(80.0f), bottomGap(50.0f),
                      snowSpawnTimer(0.0f), snowSpawnRate(0.1f), rng(std::random_device{}()),
                      xPositionDist(0.0f, 800.0f), velocityDist(50.0f, 150.0f), windDist(-30.0f, 30.0f) {
 }
@@ -60,7 +61,7 @@ void Weather::updateSnow(float deltaTime) {
 void Weather::spawnSnowflake() {
     Snowflake snowflake;
     snowflake.position.x = xPositionDist(rng);
-    snowflake.position.y = -10.0f;
+    snowflake.position.y = -topGap - 10.0f;
     snowflake.velocity.x = windDist(rng);
     snowflake.velocity.y = velocityDist(rng);
     snowflake.windOffset = 2.0f;
@@ -77,7 +78,7 @@ void Weather::removeOffscreenSnowflakes() {
     snowflakes.erase(
         std::remove_if(snowflakes.begin(), snowflakes.end(),
             [this](const Snowflake& snowflake) {
-                return snowflake.position.y > windowHeight + 10.0f ||
+                return snowflake.position.y > windowHeight + bottomGap + 10.0f ||
                        snowflake.position.x < -10.0f ||
                        snowflake.position.x > windowWidth + 10.0f;
             }),
@@ -99,8 +100,8 @@ void Weather::updateSnowflakeFade(Snowflake& snowflake) {
     
     float distanceFromLeft = snowflake.position.x;
     float distanceFromRight = windowWidth - snowflake.position.x;
-    float distanceFromTop = snowflake.position.y;
-    float distanceFromBottom = windowHeight - snowflake.position.y;
+    float distanceFromTop = snowflake.position.y - topGap;
+    float distanceFromBottom = (windowHeight - bottomGap) - snowflake.position.y;
     
     float minDistance = std::min({distanceFromLeft, distanceFromRight, distanceFromTop, distanceFromBottom});
     
