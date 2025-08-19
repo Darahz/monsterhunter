@@ -4,6 +4,7 @@
 #include "Inventory.h"
 #include "Injury.h"
 #include <SFML/System.hpp>
+#include <vector>
 
 class Player : public Creature {
 public:

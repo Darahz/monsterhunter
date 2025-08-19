@@ -1,7 +1,8 @@
 #pragma once
-#include "../include/Player.h"
 
 #include <string>
+
+class Player;
 
 class Injury {
 public:

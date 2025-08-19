@@ -1,4 +1,5 @@
 #include "../include/Injury.h"
+#include "../include/Player.h"
 
 std::string Injury::getType() const {
     return type;
