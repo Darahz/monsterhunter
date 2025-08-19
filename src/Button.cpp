@@ -4,10 +4,10 @@ Button::Button(const std::string& text, const sf::Font& font, unsigned int chara
     label.setFont(font);
     label.setString(text);
     label.setCharacterSize(characterSize);
-    label.setFillColor(sf::Color::White);
+    label.setFillColor(sf::Color::White);  // Default white text
 
-    shape.setFillColor(sf::Color::Blue);
     shape.setSize(sf::Vector2f(200, 50));
+    shape.setFillColor(sf::Color(100, 100, 100, 25));  // Default gray background
 }
 
 void Button::setPosition(float x, float y) {
@@ -21,6 +21,14 @@ void Button::setSize(float width, float height) {
 
 void Button::setCallback(std::function<void()> callback) {
     onClick = callback;
+}
+
+void Button::setBackgroundColor(const sf::Color& color) {
+    shape.setFillColor(color);
+}
+
+void Button::setTextColor(const sf::Color& color) {
+    label.setFillColor(color);
 }
 
 void Button::render(sf::RenderTarget& target) {
