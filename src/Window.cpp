@@ -50,7 +50,8 @@ void Window::clear() {
 
 void Window::loadFont(const std::string& fontPath) {
     if (!font.loadFromFile(fontPath)) {
-        std::cout << "Failed to load font from " << fontPath << std::endl;
+        std::cerr << "Failed to load font from " << fontPath << std::endl;
+        std::exit(1);
     }
 }
 
