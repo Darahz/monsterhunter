@@ -61,6 +61,9 @@ void Screen::onEnter() {
 
 void Screen::onExit() {
     isActive = false;
+    if (weather) {
+        weather->stopUpdateThread();
+    }
 }
 
 void Screen::setScreenChangeCallback(std::function<void(ScreenType)> callback) {
@@ -88,6 +91,7 @@ MainMenuScreen::MainMenuScreen(sf::Vector2u windowSize, const sf::Font& font)
     : Screen(ScreenType::MainMenu, windowSize), backgroundLoaded(false) {
     setupButtons(font);
     weather->setWeatherType(WeatherType::Snow);
+    weather->startUpdateThread();
     
     // Load background image
     if (backgroundTexture.loadFromFile("assets/mainmenubg2.png")) {
@@ -175,6 +179,7 @@ GameScreen::GameScreen(sf::Vector2u windowSize)
     : Screen(ScreenType::Game, windowSize) {
     // No weather for game screen by default
     weather->setWeatherType(WeatherType::None);
+    weather->startUpdateThread();
 }
 
 void GameScreen::update(float deltaTime) {
