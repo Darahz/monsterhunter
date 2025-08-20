@@ -11,6 +11,7 @@ public:
     void setCallback(std::function<void()> callback);
     void setBackgroundColor(const sf::Color& color);
     void setTextColor(const sf::Color& color);
+    void updateHover(const sf::Vector2f& mousePos);
     void render(sf::RenderTarget& target);
     bool isMouseOver(const sf::Vector2f& mousePos) const;
     bool handleEvent(const sf::Event& event);
@@ -19,4 +20,7 @@ private:
     sf::RectangleShape shape;
     sf::Text label;
     std::function<void()> onClick;
+    sf::Color normalColor;
+    sf::Color hoverColor;
+    bool isHovered;
 };
