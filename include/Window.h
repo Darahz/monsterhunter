@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include "Button.h"
 #include <iostream>
+#include <chrono>
 
 enum class WindowSize {
     // Common 4:3 aspect ratio sizes
@@ -36,6 +37,7 @@ public:
 
     bool initialize(WindowSize size = WindowSize::SVGA);
     void update();
+    void updateFPS();
     void clear();
     void render();
     void loadFont(const std::string& fontPath);
@@ -49,4 +51,10 @@ private:
     int majorVersion = 8;
     int minorVersion = 18;
     int patchVersion = 0;
+    
+    // FPS tracking
+    std::chrono::steady_clock::time_point lastTime;
+    int frameCount;
+    float currentFPS;
+    std::string baseTitle;
 };

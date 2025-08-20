@@ -1,7 +1,8 @@
 #include "../include/Window.h"
 
-Window::Window() {
+Window::Window() : frameCount(0), currentFPS(0.0f) {
     loadFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+    lastTime = std::chrono::steady_clock::now();
 }
 
 Window::~Window() {
@@ -32,12 +33,30 @@ sf::VideoMode Window::getVideoModeFromSize(WindowSize size) const {
 
 bool Window::initialize(WindowSize size) {
     sf::VideoMode videoMode = getVideoModeFromSize(size);
-    window.create(videoMode, "Monster Hunter v." + this->getVersion());
+    baseTitle = "Monster Hunter v." + this->getVersion();
+    window.setFramerateLimit(60);
+    window.setVerticalSyncEnabled(true);
+    window.create(videoMode, baseTitle);
     return window.isOpen();
 }
 
 void Window::update() {
-    // Event handling moved to main loop
+    updateFPS();
+}
+
+void Window::updateFPS() {
+    frameCount++;
+    auto currentTime = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
+    
+    if (elapsed.count() >= 1000) {
+        currentFPS = frameCount / (elapsed.count() / 1000.0f);
+        frameCount = 0;
+        lastTime = currentTime;
+        
+        std::string title = baseTitle + " - FPS: " + std::to_string(static_cast<int>(currentFPS));
+        window.setTitle(title);
+    }
 }
 
 void Window::render() {
