@@ -1,25 +1,19 @@
 #pragma once
-#include <string>
-#include <unordered_map>
 #include <vector>
+#include "Item.h"
 
 class Inventory {
-private:
-    std::unordered_map<std::string,int> items;
-    std::string equipped;
-
 public:
     Inventory();
-    void addItem(std::string name, int num);
-    void removeItem(std::string name, int amt = 1);
-    void listItems() const;
-    void clearInventory();
-    
-    int getItemCount(std::string name) const;
-    bool hasItem(std::string name) const;
-    
-    std::vector<std::pair<std::string,int>> getItemsList() const;
-    
-    bool equipItem(std::string name);
-    std::string getEquipped() const { return equipped; }
+    ~Inventory();
+
+    void addItem(const Item& item);
+    void removeItem(const Item& item);
+    void drawInventory();
+    void clear();
+
+    std::vector<Item> getItems() const;
+
+private:
+    std::vector<Item> items;
 };

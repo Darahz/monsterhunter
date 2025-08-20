@@ -1,32 +1,24 @@
-// Player.h
 #pragma once
-#include <string>
-#include "Creature.h"
 
-class World; // forward declare
+#include "Creature.h"
+#include "Inventory.h"
+#include "Injury.h"
+#include <SFML/System.hpp>
+#include <vector>
 
 class Player : public Creature {
 public:
+    float timeAlive;
     Player();
-    void addItem(std::string name, int num) { inventory.addItem(name, num); }
-    void removeItem(std::string name, int amt = 1) { inventory.removeItem(name, amt); }
-    void listInventory() { inventory.listItems(); }
+    ~Player();
 
-    int  getItemCount(std::string name) { return inventory.getItemCount(name); }
-    bool hasItem(std::string name) { return inventory.hasItem(name); }
-    void clearInventory();
-
-    std::vector<std::pair<std::string,int>> getInventoryList() const { return inventory.getItemsList(); }
-
-    bool equipItem(std::string name) { return inventory.equipItem(name); }
-    std::string getEquipped() const { return inventory.getEquipped(); }
-
-    bool craftItem(std::string itemName);
-    bool isDead() override;
-    void TakeHealth(int iRemoval) override;
-    void AddHealth(int iAdd) override;
-    void rest(World& world);
-    void printHealth() override;
-    int getHealth() const { return iHealth; }
-    void setHealth(int h);
+    Inventory& getInventory() { return inventory; }
+    /// @brief Updates the player's state, such as time alive.
+    void update();
+    void render();
+    // list of current injuries
+    std::vector<Injury> injuries;
+private:
+    Inventory inventory;
+    sf::Clock clock;
 };
