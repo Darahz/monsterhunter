@@ -90,7 +90,7 @@ MainMenuScreen::MainMenuScreen(sf::Vector2u windowSize, const sf::Font& font)
     weather->setWeatherType(WeatherType::Snow);
     
     // Load background image
-    if (backgroundTexture.loadFromFile("assets/mainmenubg.png")) {
+    if (backgroundTexture.loadFromFile("assets/mainmenubg2.png")) {
         backgroundSprite.setTexture(backgroundTexture);
         
         // Scale the background to fit the window
@@ -102,7 +102,7 @@ MainMenuScreen::MainMenuScreen(sf::Vector2u windowSize, const sf::Font& font)
         backgroundLoaded = true;
         std::cout << "Background image loaded successfully!" << std::endl;
     } else {
-        std::cout << "Failed to load background image: assets/mainmenubg.png" << std::endl;
+        std::cout << "Failed to load background image: assets/mainmenubg2.png" << std::endl;
     }
 }
 
