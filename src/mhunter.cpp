@@ -34,6 +34,7 @@ int main(){
         
         // Update systems
         float deltaTime = 0.1f / 240.0f;
+        window.update();
         player.update();
         screenManager.update(deltaTime);
         
