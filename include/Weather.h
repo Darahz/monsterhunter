@@ -3,6 +3,10 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <random>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <chrono>
 
 enum class WeatherType {
     None,
@@ -26,6 +30,8 @@ public:
     void update(float deltaTime);
     void draw(sf::RenderWindow& window);
     void setWindowSize(float width, float height);
+    void startUpdateThread();
+    void stopUpdateThread();
 
 private:
     WeatherType currentWeather;
@@ -42,8 +48,15 @@ private:
     std::uniform_real_distribution<float> velocityDist;
     std::uniform_real_distribution<float> windDist;
 
+    std::thread updateThread;
+    std::mutex snowflakesMutex;
+    std::atomic<bool> threadRunning;
+    std::atomic<bool> shouldStop;
+    std::chrono::steady_clock::time_point lastUpdateTime;
+
     void updateSnow(float deltaTime);
     void spawnSnowflake();
     void removeOffscreenSnowflakes();
     void updateSnowflakeFade(Snowflake& snowflake);
+    void threadUpdateLoop();
 };
