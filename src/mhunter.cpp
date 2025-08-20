@@ -1,48 +1,52 @@
 #include "../include/Window.h"
 #include "../include/Inventory.h"
 #include "../include/Player.h"
-#include "../include/Button.h"
-#include "../include/Weather.h"
-#include "../include/Screeneffects.h"
+#include "../include/Screen.h"
 
 #include <unistd.h>
 
 int main(){
     Window window;
     Player player;
-    Weather weather;
-    ScreenEffects screenEffects;
-    weather.setWeatherType(WeatherType::Snow);
-    
 
     if (!window.initialize(WindowSize::HD_720)) {
         return -1;
     }
-    weather.setWindowSize(window.getSize().x, window.getSize().y);
-    Button startButton("Start Game", window.font, 24);
-    startButton.setPosition(200, 200);
-    startButton.setCallback([&]() {
+
+    // Create screen manager
+    ScreenManager screenManager(window.getSize(), window.font);
+
+    // Set up quit callback
+    screenManager.setQuitCallback([&window]() {
+        window.window.close();
     });
 
-    screenEffects.startFadeIn(10.0f);
     while (window.isOpen()) {
         sf::Event event;
         while (window.window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 window.window.close();
             }
-            startButton.handleEvent(event);                      
+            
+            // Handle screen events
+            screenManager.handleEvent(event);
         }
         
+        // Update systems
+        float deltaTime = 0.1f / 240.0f;
         player.update();
-        screenEffects.update(0.1f / 240.0f);
+        screenManager.update(deltaTime);
         
+        // Render
         window.clear();
-        weather.update(0.1f / 240.0f);
-        weather.draw(window.window);
-        startButton.render(window.window);
-        player.render();
-        screenEffects.fadeIn(window.window);  // Draw fade effect on top
+        
+        // Render current screen
+        screenManager.render(window.window);
+        
+        // Render player only on game screen
+        if (screenManager.getCurrentScreenType() == ScreenType::Game) {
+            player.render();
+        }
         
         window.render();
     }
