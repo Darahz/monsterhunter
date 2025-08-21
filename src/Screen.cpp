@@ -1,4 +1,5 @@
 #include "../include/Screen.h"
+#include "../include/Window.h"
 #include <iostream>
 
 // Base Screen class implementation
@@ -75,7 +76,7 @@ void Screen::setQuitCallback(std::function<void()> callback) {
 }
 
 void Screen::addButton(const std::string& text, sf::Vector2f position, const sf::Font& font) {
-    auto button = std::make_unique<Button>(text, font, 24);
+    auto button = std::make_unique<UI::Button>(text, font, 24);
     button->setPosition(position.x, position.y);
     buttons.push_back(std::move(button));
 }
@@ -112,7 +113,7 @@ MainMenuScreen::MainMenuScreen(sf::Vector2u windowSize, const sf::Font& font)
 
 void MainMenuScreen::setupButtons(const sf::Font& font) {
     // Start Game button
-    auto startButton = std::make_unique<Button>("Start Game", font, 24);
+    auto startButton = std::make_unique<UI::Button>("Start Game", font, 24);
     startButton->setPosition(50, windowSize.y / 2);
     startButton->setBackgroundColor(sf::Color(50, 50, 50));
     startButton->setTextColor(sf::Color::White);
@@ -126,7 +127,7 @@ void MainMenuScreen::setupButtons(const sf::Font& font) {
     buttons.push_back(std::move(startButton));
 
     // Settings button
-    auto settingsButton = std::make_unique<Button>("Settings", font, 24);
+    auto settingsButton = std::make_unique<UI::Button>("Settings", font, 24);
     settingsButton->setPosition(50, windowSize.y / 2 + 60);
     settingsButton->setBackgroundColor(sf::Color(50, 50, 50));
     settingsButton->setTextColor(sf::Color::White);
@@ -139,7 +140,7 @@ void MainMenuScreen::setupButtons(const sf::Font& font) {
     buttons.push_back(std::move(settingsButton));
 
     // Quit button
-    auto quitButton = std::make_unique<Button>("Quit", font, 24);
+    auto quitButton = std::make_unique<UI::Button>("Quit", font, 24);
     quitButton->setPosition(50, windowSize.y / 2 + 120);
     quitButton->setBackgroundColor(sf::Color(50, 50, 50));
     quitButton->setTextColor(sf::Color::White);
@@ -219,6 +220,218 @@ void GameScreen::onEnter() {
     std::cout << "Entered Game Screen" << std::endl;
 }
 
+// SettingsScreen implementation
+SettingsScreen::SettingsScreen(sf::Vector2u windowSize, const sf::Font& font, Window* windowRef)
+    : Screen(ScreenType::Settings, windowSize), windowReference(windowRef) {
+    setupUI(font);
+    weather->setWeatherType(WeatherType::None);
+    weather->startUpdateThread();
+}
+
+void SettingsScreen::setupUI(const sf::Font& font) {
+    float startY = 100.0f;
+    float spacing = 80.0f;
+    float rightColumnX = 450.0f;
+    
+    // Volume slider
+    auto volumeLabel = std::make_unique<UI::Label>("Master Volume", font, 18);
+    volumeLabel->setPosition(50, startY);
+    labels.push_back(std::move(volumeLabel));
+    
+    auto volumeSlider = std::make_unique<UI::Slider>(0.0f, 100.0f, 75.0f, font);
+    volumeSlider->setPosition(50, startY + 25);
+    volumeSlider->setSize(300, 10);
+    volumeSlider->setCallback([](float value) {
+        std::cout << "Volume set to: " << value << "%" << std::endl;
+    });
+    sliders.push_back(std::move(volumeSlider));
+    
+    // FPS Limit slider
+    auto fpsLabel = std::make_unique<UI::Label>("FPS Limit", font, 18);
+    fpsLabel->setPosition(50, startY + spacing);
+    labels.push_back(std::move(fpsLabel));
+    
+    auto fpsSlider = std::make_unique<UI::Slider>(30.0f, 144.0f, 60.0f, font);
+    fpsSlider->setPosition(50, startY + spacing + 25);
+    fpsSlider->setSize(300, 10);
+    fpsSlider->setCallback([this](float value) {
+        if (windowReference) {
+            windowReference->setFramerateLimit(static_cast<int>(value));
+        } else {
+            std::cout << "FPS Limit set to: " << static_cast<int>(value) << std::endl;
+        }
+    });
+    sliders.push_back(std::move(fpsSlider));
+    
+    // Music Volume slider
+    auto musicLabel = std::make_unique<UI::Label>("Music Volume", font, 18);
+    musicLabel->setPosition(50, startY + spacing * 2);
+    labels.push_back(std::move(musicLabel));
+    
+    auto musicSlider = std::make_unique<UI::Slider>(0.0f, 100.0f, 50.0f, font);
+    musicSlider->setPosition(50, startY + spacing * 2 + 25);
+    musicSlider->setSize(300, 10);
+    musicSlider->setCallback([](float value) {
+        std::cout << "Music Volume set to: " << value << "%" << std::endl;
+    });
+    sliders.push_back(std::move(musicSlider));
+    
+    // Screen Resolution dropdown
+    auto resolutionLabel = std::make_unique<UI::Label>("Screen Resolution", font, 18);
+    resolutionLabel->setPosition(rightColumnX, startY);
+    labels.push_back(std::move(resolutionLabel));
+    
+    auto resolutionDropdown = std::make_unique<UI::Dropdown>(font, 200);
+    resolutionDropdown->setPosition(rightColumnX, startY + 25);
+    resolutionDropdown->addItem("640x480 (VGA)");
+    resolutionDropdown->addItem("800x600 (SVGA)");
+    resolutionDropdown->addItem("1024x768 (XGA)");
+    resolutionDropdown->addItem("1280x720 (HD)");
+    resolutionDropdown->addItem("1600x900 (HD+)");
+    resolutionDropdown->addItem("1920x1080 (Full HD)");
+    resolutionDropdown->addItem("1280x800 (WXGA)");
+    resolutionDropdown->addItem("1680x1050 (WSXGA)");
+    resolutionDropdown->addItem("1920x1200 (WUXGA)");
+    resolutionDropdown->setSelectedIndex(1); // Default to SVGA
+    resolutionDropdown->setCallback([this](int index, const std::string& item) {
+        if (windowReference) {
+            WindowSize newSize = static_cast<WindowSize>(index);
+            windowReference->changeResolution(newSize);
+        } else {
+            std::cout << "Resolution changed to: " << item << " (index: " << index << ")" << std::endl;
+        }
+    });
+    dropdowns.push_back(std::move(resolutionDropdown));
+    
+    // Fullscreen checkbox
+    auto fullscreenCheckbox = std::make_unique<UI::Checkbox>("Enable Fullscreen", font, false);
+    fullscreenCheckbox->setPosition(rightColumnX, startY + spacing);
+    fullscreenCheckbox->setCallback([this](bool checked) {
+        if (windowReference) {
+            windowReference->setFullscreen(checked);
+        } else {
+            std::cout << "Fullscreen " << (checked ? "enabled" : "disabled") << std::endl;
+        }
+    });
+    checkboxes.push_back(std::move(fullscreenCheckbox));
+    
+    // VSync checkbox
+    auto vsyncCheckbox = std::make_unique<UI::Checkbox>("Enable VSync", font, true);
+    vsyncCheckbox->setPosition(rightColumnX, startY + spacing + 40);
+    vsyncCheckbox->setCallback([this](bool checked) {
+        if (windowReference) {
+            windowReference->setVSync(checked);
+        } else {
+            std::cout << "VSync " << (checked ? "enabled" : "disabled") << std::endl;
+        }
+    });
+    checkboxes.push_back(std::move(vsyncCheckbox));
+    
+    // Show FPS checkbox
+    auto showFpsCheckbox = std::make_unique<UI::Checkbox>("Show FPS in Title", font, true);
+    showFpsCheckbox->setPosition(rightColumnX, startY + spacing + 80);
+    showFpsCheckbox->setCallback([this](bool checked) {
+        if (windowReference) {
+            windowReference->setShowFPS(checked);
+        } else {
+            std::cout << "FPS display " << (checked ? "enabled" : "disabled") << std::endl;
+        }
+    });
+    checkboxes.push_back(std::move(showFpsCheckbox));
+    
+    // Back button
+    auto backButton = std::make_unique<UI::Button>("Back", font, 24);
+    backButton->setPosition(50, startY + spacing * 3 + 50);
+    backButton->setBackgroundColor(sf::Color(100, 100, 100));
+    backButton->setTextColor(sf::Color::White);
+    backButton->setCallback([this]() {
+        std::cout << "Returning to main menu..." << std::endl;
+        if (onScreenChange) {
+            onScreenChange(ScreenType::MainMenu);
+        }
+    });
+    buttons.push_back(std::move(backButton));
+}
+
+void SettingsScreen::update(float deltaTime) {
+    Screen::update(deltaTime);
+}
+
+void SettingsScreen::render(sf::RenderWindow& window) {
+    // Dark background
+    sf::RectangleShape background;
+    background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 
+                                   static_cast<float>(windowSize.y)));
+    background.setFillColor(sf::Color(30, 30, 30));
+    window.draw(background);
+    
+    // Render labels
+    for (auto& label : labels) {
+        label->render(window);
+    }
+    
+    // Render sliders
+    for (auto& slider : sliders) {
+        slider->render(window);
+    }
+    
+    // Render checkboxes
+    for (auto& checkbox : checkboxes) {
+        checkbox->render(window);
+    }
+    
+    // Render dropdowns
+    for (auto& dropdown : dropdowns) {
+        dropdown->render(window);
+    }
+    
+    // Render base screen elements (buttons, effects)
+    Screen::render(window);
+}
+
+void SettingsScreen::handleEvent(const sf::Event& event) {
+    Screen::handleEvent(event);
+    
+    // Handle slider events
+    for (auto& slider : sliders) {
+        slider->handleEvent(event);
+    }
+    
+    // Handle checkbox events
+    for (auto& checkbox : checkboxes) {
+        checkbox->handleEvent(event);
+    }
+    
+    // Handle dropdown events
+    for (auto& dropdown : dropdowns) {
+        dropdown->handleEvent(event);
+    }
+    
+    // Handle mouse movement for all components
+    if (event.type == sf::Event::MouseMoved) {
+        sf::Vector2f mousePos(static_cast<float>(event.mouseMove.x), 
+                             static_cast<float>(event.mouseMove.y));
+        for (auto& slider : sliders) {
+            slider->updateHover(mousePos);
+        }
+        for (auto& checkbox : checkboxes) {
+            checkbox->updateHover(mousePos);
+        }
+        for (auto& dropdown : dropdowns) {
+            dropdown->updateHover(mousePos);
+        }
+    }
+}
+
+void SettingsScreen::onEnter() {
+    Screen::onEnter();
+    std::cout << "Entered Settings Screen" << std::endl;
+}
+
+void SettingsScreen::setWindowReference(Window* windowRef) {
+    windowReference = windowRef;
+}
+
 // ScreenManager implementation
 ScreenManager::ScreenManager(sf::Vector2u windowSize, const sf::Font& font) 
     : currentScreen(nullptr), windowSize(windowSize) {
@@ -230,6 +443,7 @@ void ScreenManager::setupScreens(const sf::Font& font) {
     // Create all screens
     screens.push_back(std::make_unique<MainMenuScreen>(windowSize, font));
     screens.push_back(std::make_unique<GameScreen>(windowSize));
+    screens.push_back(std::make_unique<SettingsScreen>(windowSize, font));
 
     // Set up screen change callbacks
     for (auto& screen : screens) {
@@ -241,6 +455,16 @@ void ScreenManager::setupScreens(const sf::Font& font) {
                 onQuit();
             }
         });
+    }
+}
+
+void ScreenManager::setWindowReference(Window* windowRef) {
+    // Find the settings screen and set its window reference
+    for (auto& screen : screens) {
+        if (screen->getType() == ScreenType::Settings) {
+            static_cast<SettingsScreen*>(screen.get())->setWindowReference(windowRef);
+            break;
+        }
     }
 }
 

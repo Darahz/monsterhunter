@@ -1,6 +1,7 @@
 #include "../include/Window.h"
 
-Window::Window() : frameCount(0), currentFPS(0.0f) {
+Window::Window() : frameCount(0), currentFPS(0.0f), currentSize(WindowSize::SVGA), 
+                 fullscreenMode(false), vsyncEnabled(true), showFPS(true) {
     loadFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
     lastTime = std::chrono::steady_clock::now();
 }
@@ -32,11 +33,14 @@ sf::VideoMode Window::getVideoModeFromSize(WindowSize size) const {
 }
 
 bool Window::initialize(WindowSize size) {
+    currentSize = size;
     sf::VideoMode videoMode = getVideoModeFromSize(size);
     baseTitle = "Monster Hunter v." + this->getVersion();
     window.setFramerateLimit(60);
-    window.setVerticalSyncEnabled(true);
-    window.create(videoMode, baseTitle);
+    window.setVerticalSyncEnabled(vsyncEnabled);
+    
+    sf::Uint32 style = fullscreenMode ? sf::Style::Fullscreen : sf::Style::Default;
+    window.create(videoMode, baseTitle, style);
     return window.isOpen();
 }
 
@@ -54,7 +58,10 @@ void Window::updateFPS() {
         frameCount = 0;
         lastTime = currentTime;
         
-        std::string title = baseTitle + " - FPS: " + std::to_string(static_cast<int>(currentFPS));
+        std::string title = baseTitle;
+        if (showFPS) {
+            title += " - FPS: " + std::to_string(static_cast<int>(currentFPS));
+        }
         window.setTitle(title);
     }
 }
@@ -80,4 +87,106 @@ bool Window::isOpen() const {
 
 sf::Vector2u Window::getSize() const {
     return window.getSize();
+}
+
+// New functionality for settings
+void Window::changeResolution(WindowSize newSize) {
+    if (newSize == currentSize) return;
+    
+    currentSize = newSize;
+    sf::VideoMode videoMode = getVideoModeFromSize(newSize);
+    sf::Uint32 style = fullscreenMode ? sf::Style::Fullscreen : sf::Style::Default;
+    
+    // Store current window position if not fullscreen
+    sf::Vector2i oldPosition = window.getPosition();
+    
+    // Get current title to preserve it
+    std::string currentTitle = baseTitle;
+    if (showFPS) {
+        currentTitle += " - FPS: " + std::to_string(static_cast<int>(currentFPS));
+    }
+    
+    window.create(videoMode, currentTitle, style);
+    window.setVerticalSyncEnabled(vsyncEnabled);
+    window.setFramerateLimit(60); // Keep current framerate limit
+    
+    // Restore position if not fullscreen
+    if (!fullscreenMode) {
+        window.setPosition(oldPosition);
+    }
+    
+    std::cout << "Resolution changed to: " << videoMode.width << "x" << videoMode.height << std::endl;
+}
+
+void Window::setFullscreen(bool fullscreen) {
+    if (fullscreen == fullscreenMode) return;
+    
+    fullscreenMode = fullscreen;
+    sf::VideoMode videoMode = getVideoModeFromSize(currentSize);
+    sf::Uint32 style = fullscreenMode ? sf::Style::Fullscreen : sf::Style::Default;
+    
+    // Store current window position if switching from windowed
+    sf::Vector2i oldPosition = window.getPosition();
+    
+    // Get current title to preserve it
+    std::string currentTitle = baseTitle;
+    if (showFPS) {
+        currentTitle += " - FPS: " + std::to_string(static_cast<int>(currentFPS));
+    }
+    
+    window.create(videoMode, currentTitle, style);
+    window.setVerticalSyncEnabled(vsyncEnabled);
+    window.setFramerateLimit(60);
+    
+    // Restore position if switching back to windowed
+    if (!fullscreenMode) {
+        window.setPosition(oldPosition);
+    }
+    
+    std::cout << "Fullscreen " << (fullscreenMode ? "enabled" : "disabled") << std::endl;
+}
+
+void Window::setVSync(bool enabled) {
+    if (enabled == vsyncEnabled) return;
+    
+    vsyncEnabled = enabled;
+    window.setVerticalSyncEnabled(vsyncEnabled);
+    std::cout << "VSync " << (vsyncEnabled ? "enabled" : "disabled") << std::endl;
+}
+
+void Window::setShowFPS(bool show) {
+    if (show == showFPS) return;
+    
+    showFPS = show;
+    
+    // Update title immediately
+    std::string title = baseTitle;
+    if (showFPS) {
+        title += " - FPS: " + std::to_string(static_cast<int>(currentFPS));
+    }
+    window.setTitle(title);
+    
+    std::cout << "FPS display " << (showFPS ? "enabled" : "disabled") << std::endl;
+}
+
+void Window::setFramerateLimit(int fps) {
+    window.setFramerateLimit(fps);
+    std::cout << "Framerate limit set to: " << fps << std::endl;
+}
+
+// Getters for current settings
+bool Window::isFullscreen() const {
+    return fullscreenMode;
+}
+
+bool Window::isVSyncEnabled() const {
+    return vsyncEnabled;
+}
+
+bool Window::isShowingFPS() const {
+    return showFPS;
+}
+
+WindowSize Window::getCurrentWindowSize() const {
+    return currentSize;
 }
