@@ -4,9 +4,12 @@
 #include <vector>
 #include <memory>
 #include <functional>
-#include "Button.h"
+#include "UIElements.h"
 #include "Weather.h"
 #include "Screeneffects.h"
+
+// Forward declarations
+class Window;
 
 enum class ScreenType {
     MainMenu,
@@ -40,7 +43,7 @@ protected:
     ScreenType screenType;
     sf::Vector2u windowSize;
     bool isActive;
-    std::vector<std::unique_ptr<Button>> buttons;
+    std::vector<std::unique_ptr<UI::Button>> buttons;
     std::unique_ptr<Weather> weather;
     std::unique_ptr<ScreenEffects> screenEffects;
     std::function<void(ScreenType)> onScreenChange;
@@ -75,6 +78,25 @@ public:
     void onEnter() override;
 };
 
+class SettingsScreen : public Screen {
+public:
+    SettingsScreen(sf::Vector2u windowSize, const sf::Font& font, Window* windowRef = nullptr);
+    void update(float deltaTime) override;
+    void render(sf::RenderWindow& window) override;
+    void handleEvent(const sf::Event& event) override;
+    void onEnter() override;
+    
+    void setWindowReference(Window* windowRef);
+
+private:
+    void setupUI(const sf::Font& font);
+    std::vector<std::unique_ptr<UI::Slider>> sliders;
+    std::vector<std::unique_ptr<UI::Label>> labels;
+    std::vector<std::unique_ptr<UI::Checkbox>> checkboxes;
+    std::vector<std::unique_ptr<UI::Dropdown>> dropdowns;
+    Window* windowReference;
+};
+
 // Screen Manager class
 class ScreenManager {
 public:
@@ -86,6 +108,7 @@ public:
     void handleEvent(const sf::Event& event);
     void changeScreen(ScreenType newScreen);
     void setQuitCallback(std::function<void()> callback);
+    void setWindowReference(Window* windowRef);
     
     ScreenType getCurrentScreenType() const;
 

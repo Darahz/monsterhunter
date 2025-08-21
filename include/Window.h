@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Button.h"
+#include "UIElements.h"
 #include <iostream>
 #include <chrono>
 
@@ -45,6 +45,19 @@ public:
     std::string getVersion() const;
     sf::VideoMode getVideoModeFromSize(WindowSize size) const;
     sf::Vector2u getSize() const;
+    
+    // New functionality for settings
+    void changeResolution(WindowSize newSize);
+    void setFullscreen(bool fullscreen);
+    void setVSync(bool enabled);
+    void setShowFPS(bool show);
+    void setFramerateLimit(int fps);
+    
+    // Getters for current settings
+    bool isFullscreen() const;
+    bool isVSyncEnabled() const;
+    bool isShowingFPS() const;
+    WindowSize getCurrentWindowSize() const;
 
 private:
     // Just use todays date cuz im lazy
@@ -57,4 +70,10 @@ private:
     int frameCount;
     float currentFPS;
     std::string baseTitle;
+    
+    // Window settings
+    WindowSize currentSize;
+    bool fullscreenMode;
+    bool vsyncEnabled;
+    bool showFPS;
 };
