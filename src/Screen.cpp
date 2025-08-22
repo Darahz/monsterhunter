@@ -203,28 +203,54 @@ void MainMenuScreen::updateBackgroundScale() {
 }
 
 // GameScreen implementation
-GameScreen::GameScreen(sf::Vector2u windowSize) 
-    : Screen(ScreenType::Game, windowSize) {
+GameScreen::GameScreen(sf::Vector2u windowSize, const sf::Font& font) 
+    : Screen(ScreenType::Game, windowSize), storedFont(&font), world(std::make_unique<World>()) {
     weather->setWeatherType(WeatherType::None);
     weather->startUpdateThread();
+    setupUI();
 }
 
 void GameScreen::update(float deltaTime) {
     Screen::update(deltaTime);
+    
+    if (world) {
+        world->update(deltaTime);
+        updateTimeDisplay();
+        updateDayNightSymbol();
+    }
 }
 
 void GameScreen::render(sf::RenderWindow& window) {
     sf::RectangleShape background;
     background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 
                                    static_cast<float>(windowSize.y)));
-    background.setFillColor(sf::Color(20, 40, 60));
+    background.setFillColor(sf::Color(25,25,25));
     window.draw(background);
 
     Screen::render(window);
+    
+    // Render top bar
+    window.draw(topBar);
+    window.draw(timeText);
+    window.draw(timeOfDayText);
+    window.draw(dayNightSymbol);
+    
+    // Render bottom bar
+    window.draw(bottomBar);
+    
+    // Render action buttons (when implemented)
+    for (const auto& button : actionButtons) {
+        button->render(window);
+    }
 }
 
 void GameScreen::handleEvent(const sf::Event& event) {
     Screen::handleEvent(event);
+    
+    // Handle action button events (when implemented)
+    for (auto& button : actionButtons) {
+        button->handleEvent(event);
+    }
     
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Escape) {
@@ -242,6 +268,81 @@ void GameScreen::onEnter() {
 
 void GameScreen::updateWindowSize(sf::Vector2u newSize) {
     Screen::updateWindowSize(newSize);
+    setupUI();
+}
+
+void GameScreen::setupUI() {
+    if (!storedFont) return;
+    
+    float windowWidth = static_cast<float>(windowSize.x);
+    float windowHeight = static_cast<float>(windowSize.y);
+    
+    // Setup top bar
+    topBar.setSize(sf::Vector2f(windowWidth, BAR_HEIGHT));
+    topBar.setPosition(0, 0);
+    topBar.setFillColor(sf::Color(0, 0, 0, 150)); // Semi-transparent black
+    
+    // Setup bottom bar
+    bottomBar.setSize(sf::Vector2f(windowWidth, BAR_HEIGHT));
+    bottomBar.setPosition(0, windowHeight - BAR_HEIGHT);
+    bottomBar.setFillColor(sf::Color(0, 0, 0, 150)); // Semi-transparent black
+    
+    // Setup time text
+    timeText.setFont(*storedFont);
+    timeText.setCharacterSize(24);
+    timeText.setFillColor(sf::Color::White);
+    timeText.setPosition(20, 18); // Left side of top bar
+    
+    // Setup time of day text
+    timeOfDayText.setFont(*storedFont);
+    timeOfDayText.setCharacterSize(20);
+    timeOfDayText.setFillColor(sf::Color::White);
+    timeOfDayText.setPosition(120, 20); // Next to time
+    
+    // Setup day/night symbol
+    dayNightSymbol.setRadius(15);
+    dayNightSymbol.setPosition(windowWidth - 50, 15); // Right side of top bar
+    
+    // Clear and setup action buttons array (placeholder for future buttons)
+    actionButtons.clear();
+    // Future buttons will be added here
+    
+    // Initial updates
+    updateTimeDisplay();
+    updateDayNightSymbol();
+}
+
+void GameScreen::updateTimeDisplay() {
+    if (!world) return;
+    
+    // Update time text in format: | 08:00 |
+    std::string timeStr = "| " + world->getTimeString() + " | ";
+    timeText.setString(timeStr);
+    
+    // Update time of day text
+    std::string timeOfDayStr = world->getTimeOfDayString();
+    timeOfDayText.setString(timeOfDayStr);
+}
+
+void GameScreen::updateDayNightSymbol() {
+    if (!world) return;
+    
+    TimeOfDay timeOfDay = world->getTimeOfDay();
+    
+    switch (timeOfDay) {
+        case TimeOfDay::Dawn:
+            dayNightSymbol.setFillColor(sf::Color(255, 200, 100)); // Orange-yellow
+            break;
+        case TimeOfDay::Day:
+            dayNightSymbol.setFillColor(sf::Color(255, 255, 0)); // Bright yellow
+            break;
+        case TimeOfDay::Dusk:
+            dayNightSymbol.setFillColor(sf::Color(255, 150, 50)); // Orange
+            break;
+        case TimeOfDay::Night:
+            dayNightSymbol.setFillColor(sf::Color(200, 200, 255)); // Light blue
+            break;
+    }
 }
 
 // SettingsScreen implementation
@@ -530,7 +631,7 @@ void ScreenManager::setupScreens(const sf::Font& font) {
     // Create all screens
     screens.push_back(std::make_unique<MainMenuScreen>(windowSize, font));
     screens.push_back(std::make_unique<NewGameScreen>(windowSize, font));
-    screens.push_back(std::make_unique<GameScreen>(windowSize));
+    screens.push_back(std::make_unique<GameScreen>(windowSize, font));
     screens.push_back(std::make_unique<SettingsScreen>(windowSize, font));
 
     // Set up screen change callbacks

@@ -7,6 +7,7 @@
 #include "UIElements.h"
 #include "Weather.h"
 #include "Screeneffects.h"
+#include "World.h"
 
 // Forward declarations
 class Window;
@@ -80,12 +81,35 @@ private:
 
 class GameScreen : public Screen {
 public:
-    GameScreen(sf::Vector2u windowSize);
+    GameScreen(sf::Vector2u windowSize, const sf::Font& font);
     void update(float deltaTime) override;
     void render(sf::RenderWindow& window) override;
     void handleEvent(const sf::Event& event) override;
     void onEnter() override;
     void updateWindowSize(sf::Vector2u newSize) override;
+
+private:
+    const sf::Font* storedFont;
+    std::unique_ptr<class World> world;
+    
+    // UI Bars
+    sf::RectangleShape topBar;
+    sf::RectangleShape bottomBar;
+    
+    // Time display elements
+    sf::Text timeText;
+    sf::Text timeOfDayText;
+    sf::CircleShape dayNightSymbol;
+    
+    // Bottom bar buttons (placeholder for future implementation)
+    std::vector<std::unique_ptr<UI::Button>> actionButtons;
+    
+    // Bar dimensions
+    static constexpr float BAR_HEIGHT = 60.0f;
+    
+    void setupUI();
+    void updateTimeDisplay();
+    void updateDayNightSymbol();
 };
 
 class SettingsScreen : public Screen {
