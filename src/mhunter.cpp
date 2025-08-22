@@ -25,6 +25,11 @@ int main(){
     
     // Set window reference for settings screen
     screenManager.setWindowReference(&window);
+    
+    // Set up window size change callback
+    window.setWindowSizeChangeCallback([&screenManager](sf::Vector2u newSize) {
+        screenManager.updateWindowSize(newSize);
+    });
 
     // Delta time calculation variables
     auto lastTime = std::chrono::steady_clock::now();
