@@ -53,11 +53,20 @@ public:
     void setShowFPS(bool show);
     void setFramerateLimit(int fps);
     
+    // Callback for window size changes
+    void setWindowSizeChangeCallback(std::function<void(sf::Vector2u)> callback);
+    
     // Getters for current settings
     bool isFullscreen() const;
     bool isVSyncEnabled() const;
     bool isShowingFPS() const;
     WindowSize getCurrentWindowSize() const;
+    
+    // Utility functions for UI dropdown integration
+    std::vector<std::string> getAvailableResolutionNames() const;
+    std::string getResolutionName(WindowSize size) const;
+    WindowSize getWindowSizeFromIndex(int index) const;
+    int getIndexFromWindowSize(WindowSize size) const;
 
 private:
     // Just use todays date cuz im lazy
@@ -76,4 +85,7 @@ private:
     bool fullscreenMode;
     bool vsyncEnabled;
     bool showFPS;
+    
+    // Callback for window size changes
+    std::function<void(sf::Vector2u)> onWindowSizeChange;
 };

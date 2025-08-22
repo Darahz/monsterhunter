@@ -116,6 +116,11 @@ void Window::changeResolution(WindowSize newSize) {
     }
     
     std::cout << "Resolution changed to: " << videoMode.width << "x" << videoMode.height << std::endl;
+    
+    // Notify callback about window size change
+    if (onWindowSizeChange) {
+        onWindowSizeChange(sf::Vector2u(videoMode.width, videoMode.height));
+    }
 }
 
 void Window::setFullscreen(bool fullscreen) {
@@ -144,6 +149,11 @@ void Window::setFullscreen(bool fullscreen) {
     }
     
     std::cout << "Fullscreen " << (fullscreenMode ? "enabled" : "disabled") << std::endl;
+    
+    // Notify callback about window size change
+    if (onWindowSizeChange) {
+        onWindowSizeChange(sf::Vector2u(videoMode.width, videoMode.height));
+    }
 }
 
 void Window::setVSync(bool enabled) {
@@ -189,4 +199,74 @@ bool Window::isShowingFPS() const {
 
 WindowSize Window::getCurrentWindowSize() const {
     return currentSize;
+}
+
+void Window::setWindowSizeChangeCallback(std::function<void(sf::Vector2u)> callback) {
+    onWindowSizeChange = callback;
+}
+
+// Utility functions for UI dropdown integration
+std::vector<std::string> Window::getAvailableResolutionNames() const {
+    // Only include the resolutions that are commonly used in the dropdown
+    return {
+        getResolutionName(WindowSize::VGA),
+        getResolutionName(WindowSize::SVGA),
+        getResolutionName(WindowSize::XGA),
+        getResolutionName(WindowSize::HD_720),
+        getResolutionName(WindowSize::HD_900),
+        getResolutionName(WindowSize::HD_1080),
+        getResolutionName(WindowSize::WXGA),
+        getResolutionName(WindowSize::WSXGA),
+        getResolutionName(WindowSize::WUXGA)
+    };
+}
+
+std::string Window::getResolutionName(WindowSize size) const {
+    switch (size) {
+        case WindowSize::VGA:        return "640x480 (VGA)";
+        case WindowSize::SVGA:       return "800x600 (SVGA)";
+        case WindowSize::XGA:        return "1024x768 (XGA)";
+        case WindowSize::HD_720:     return "1280x720 (HD)";
+        case WindowSize::HD_900:     return "1600x900 (HD+)";
+        case WindowSize::HD_1080:    return "1920x1080 (Full HD)";
+        case WindowSize::WXGA:       return "1280x800 (WXGA)";
+        case WindowSize::WSXGA:      return "1680x1050 (WSXGA)";
+        case WindowSize::WUXGA:      return "1920x1200 (WUXGA)";
+        case WindowSize::SQUARE_800: return "800x800 (Square)";
+        case WindowSize::SQUARE_1024:return "1024x1024 (Square)";
+        case WindowSize::ULTRAWIDE:  return "2560x1080 (Ultrawide)";
+        default:                     return "800x600 (SVGA)";
+    }
+}
+
+WindowSize Window::getWindowSizeFromIndex(int index) const {
+    // Map dropdown index to WindowSize enum for commonly used resolutions
+    switch (index) {
+        case 0: return WindowSize::VGA;
+        case 1: return WindowSize::SVGA;
+        case 2: return WindowSize::XGA;
+        case 3: return WindowSize::HD_720;
+        case 4: return WindowSize::HD_900;
+        case 5: return WindowSize::HD_1080;
+        case 6: return WindowSize::WXGA;
+        case 7: return WindowSize::WSXGA;
+        case 8: return WindowSize::WUXGA;
+        default: return WindowSize::SVGA; // Fallback
+    }
+}
+
+int Window::getIndexFromWindowSize(WindowSize size) const {
+    // Map WindowSize enum to dropdown index for commonly used resolutions
+    switch (size) {
+        case WindowSize::VGA:      return 0;
+        case WindowSize::SVGA:     return 1;
+        case WindowSize::XGA:      return 2;
+        case WindowSize::HD_720:   return 3;
+        case WindowSize::HD_900:   return 4;
+        case WindowSize::HD_1080:  return 5;
+        case WindowSize::WXGA:     return 6;
+        case WindowSize::WSXGA:    return 7;
+        case WindowSize::WUXGA:    return 8;
+        default:                   return 1; // Fallback to SVGA
+    }
 }
