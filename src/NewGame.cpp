@@ -31,7 +31,7 @@ void NewGameScreen::setupUI(const sf::Font& font) {
     labels.push_back(std::move(titleLabel));
     
     // Instructions label
-    auto instructionLabel = std::make_unique<UI::Label>("Enter your hunter name:", font, 20);
+    auto instructionLabel = std::make_unique<UI::Label>("Enter your hunters name:", font, 20);
     instructionLabel->setPosition(centerX - 120, centerY - 80);
     instructionLabel->setColor(sf::Color::White);
     labels.push_back(std::move(instructionLabel));
