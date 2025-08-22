@@ -38,6 +38,10 @@ public:
     // Screen transition callback
     void setScreenChangeCallback(std::function<void(ScreenType)> callback);
     void setQuitCallback(std::function<void()> callback);
+    
+    // Window size management
+    virtual void updateWindowSize(sf::Vector2u newSize);
+    sf::Vector2u getWindowSize() const { return windowSize; }
 
 protected:
     ScreenType screenType;
@@ -61,12 +65,15 @@ public:
     void update(float deltaTime) override;
     void render(sf::RenderWindow& window) override;
     void onEnter() override;
+    void updateWindowSize(sf::Vector2u newSize) override;
 
 private:
     void setupButtons(const sf::Font& font);
+    void updateBackgroundScale();
     sf::Texture backgroundTexture;
     sf::Sprite backgroundSprite;
     bool backgroundLoaded;
+    const sf::Font* storedFont;
 };
 
 class GameScreen : public Screen {
@@ -76,6 +83,7 @@ public:
     void render(sf::RenderWindow& window) override;
     void handleEvent(const sf::Event& event) override;
     void onEnter() override;
+    void updateWindowSize(sf::Vector2u newSize) override;
 };
 
 class SettingsScreen : public Screen {
@@ -85,6 +93,7 @@ public:
     void render(sf::RenderWindow& window) override;
     void handleEvent(const sf::Event& event) override;
     void onEnter() override;
+    void updateWindowSize(sf::Vector2u newSize) override;
     
     void setWindowReference(Window* windowRef);
 
@@ -95,6 +104,8 @@ private:
     std::vector<std::unique_ptr<UI::Checkbox>> checkboxes;
     std::vector<std::unique_ptr<UI::Dropdown>> dropdowns;
     Window* windowReference;
+    const sf::Font* storedFont;
+    bool isChangingSettings; // Flag to prevent UI recreation during internal changes
 };
 
 // Screen Manager class
@@ -109,6 +120,7 @@ public:
     void changeScreen(ScreenType newScreen);
     void setQuitCallback(std::function<void()> callback);
     void setWindowReference(Window* windowRef);
+    void updateWindowSize(sf::Vector2u newSize);
     
     ScreenType getCurrentScreenType() const;
 

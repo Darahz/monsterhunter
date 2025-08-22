@@ -37,6 +37,7 @@ void Screen::render(sf::RenderWindow& window) {
     // Draw screen effects on top
     if (screenEffects) {
         screenEffects->fadeIn(window);
+        screenEffects->fadeOut(window);
     }
 }
 
@@ -87,9 +88,16 @@ void Screen::updateButtons(const sf::Vector2f& mousePos) {
     }
 }
 
+void Screen::updateWindowSize(sf::Vector2u newSize) {
+    windowSize = newSize;
+    if (weather) {
+        weather->setWindowSize(static_cast<float>(newSize.x), static_cast<float>(newSize.y));
+    }
+}
+
 // MainMenuScreen implementation
 MainMenuScreen::MainMenuScreen(sf::Vector2u windowSize, const sf::Font& font) 
-    : Screen(ScreenType::MainMenu, windowSize), backgroundLoaded(false) {
+    : Screen(ScreenType::MainMenu, windowSize), backgroundLoaded(false), storedFont(&font) {
     setupButtons(font);
     weather->setWeatherType(WeatherType::Snow);
     weather->startUpdateThread();
@@ -120,8 +128,9 @@ void MainMenuScreen::setupButtons(const sf::Font& font) {
     startButton->setCallback([this]() {
         std::cout << "Starting game..." << std::endl;
         if (onScreenChange) {
-            screenEffects->startFadeIn(1.0f);
-            onScreenChange(ScreenType::Game);
+            screenEffects->startFadeOut(1.0f, [this]() {
+                onScreenChange(ScreenType::Game);
+            });
         }
     });
     buttons.push_back(std::move(startButton));
@@ -134,7 +143,9 @@ void MainMenuScreen::setupButtons(const sf::Font& font) {
     settingsButton->setCallback([this]() {
         std::cout << "Opening settings..." << std::endl;
         if (onScreenChange) {
-            onScreenChange(ScreenType::Settings);
+            screenEffects->startFadeOut(1.5f, [this]() {
+                onScreenChange(ScreenType::Settings);
+            });
         }
     });
     buttons.push_back(std::move(settingsButton));
@@ -173,6 +184,26 @@ void MainMenuScreen::onEnter() {
     Screen::onEnter();
     screenEffects->startFadeIn(2.0f);
     std::cout << "Entered Main Menu" << std::endl;
+}
+
+void MainMenuScreen::updateWindowSize(sf::Vector2u newSize) {
+    Screen::updateWindowSize(newSize);
+    updateBackgroundScale();
+    
+    // Clear and recreate buttons with new positions
+    buttons.clear();
+    if (storedFont) {
+        setupButtons(*storedFont);
+    }
+}
+
+void MainMenuScreen::updateBackgroundScale() {
+    if (backgroundLoaded) {
+        sf::Vector2u textureSize = backgroundTexture.getSize();
+        float scaleX = static_cast<float>(windowSize.x) / static_cast<float>(textureSize.x);
+        float scaleY = static_cast<float>(windowSize.y) / static_cast<float>(textureSize.y);
+        backgroundSprite.setScale(scaleX, scaleY);
+    }
 }
 
 // GameScreen implementation
@@ -220,10 +251,18 @@ void GameScreen::onEnter() {
     std::cout << "Entered Game Screen" << std::endl;
 }
 
+void GameScreen::updateWindowSize(sf::Vector2u newSize) {
+    Screen::updateWindowSize(newSize);
+    // Game screen uses simple background rectangle, so no additional updates needed
+}
+
 // SettingsScreen implementation
 SettingsScreen::SettingsScreen(sf::Vector2u windowSize, const sf::Font& font, Window* windowRef)
-    : Screen(ScreenType::Settings, windowSize), windowReference(windowRef) {
-    setupUI(font);
+    : Screen(ScreenType::Settings, windowSize), windowReference(windowRef), storedFont(&font), isChangingSettings(false) {
+    // Only setup UI if we have a window reference, otherwise wait for setWindowReference
+    if (windowReference) {
+        setupUI(font);
+    }
     weather->setWeatherType(WeatherType::None);
     weather->startUpdateThread();
 }
@@ -283,20 +322,33 @@ void SettingsScreen::setupUI(const sf::Font& font) {
     
     auto resolutionDropdown = std::make_unique<UI::Dropdown>(font, 200);
     resolutionDropdown->setPosition(rightColumnX, startY + 25);
-    resolutionDropdown->addItem("640x480 (VGA)");
-    resolutionDropdown->addItem("800x600 (SVGA)");
-    resolutionDropdown->addItem("1024x768 (XGA)");
-    resolutionDropdown->addItem("1280x720 (HD)");
-    resolutionDropdown->addItem("1600x900 (HD+)");
-    resolutionDropdown->addItem("1920x1080 (Full HD)");
-    resolutionDropdown->addItem("1280x800 (WXGA)");
-    resolutionDropdown->addItem("1680x1050 (WSXGA)");
-    resolutionDropdown->addItem("1920x1200 (WUXGA)");
-    resolutionDropdown->setSelectedIndex(1); // Default to SVGA
+    
+    // Use Window utility functions to populate dropdown
+    if (windowReference) {
+        auto resolutionNames = windowReference->getAvailableResolutionNames();
+        for (const auto& name : resolutionNames) {
+            resolutionDropdown->addItem(name);
+        }
+    } else {
+        // Fallback if no window reference (shouldn't happen in normal usage)
+        resolutionDropdown->addItem("800x600 (SVGA)");
+    }
+    
+    // Set the dropdown to match the current window resolution
+    int currentResolutionIndex = 1; // Default to SVGA
+    if (windowReference) {
+        WindowSize currentSize = windowReference->getCurrentWindowSize();
+        currentResolutionIndex = windowReference->getIndexFromWindowSize(currentSize);
+        std::cout << "Setting dropdown to index: " << currentResolutionIndex << " for WindowSize: " << static_cast<int>(currentSize) << std::endl;
+    }
+    resolutionDropdown->setSelectedIndex(currentResolutionIndex);
+    
     resolutionDropdown->setCallback([this](int index, const std::string& item) {
         if (windowReference) {
-            WindowSize newSize = static_cast<WindowSize>(index);
+            isChangingSettings = true; // Prevent UI recreation during this change
+            WindowSize newSize = windowReference->getWindowSizeFromIndex(index);
             windowReference->changeResolution(newSize);
+            isChangingSettings = false; // Re-enable UI recreation
         } else {
             std::cout << "Resolution changed to: " << item << " (index: " << index << ")" << std::endl;
         }
@@ -304,11 +356,17 @@ void SettingsScreen::setupUI(const sf::Font& font) {
     dropdowns.push_back(std::move(resolutionDropdown));
     
     // Fullscreen checkbox
-    auto fullscreenCheckbox = std::make_unique<UI::Checkbox>("Enable Fullscreen", font, false);
+    bool currentFullscreenState = false;
+    if (windowReference) {
+        currentFullscreenState = windowReference->isFullscreen();
+    }
+    auto fullscreenCheckbox = std::make_unique<UI::Checkbox>("Enable Fullscreen", font, currentFullscreenState);
     fullscreenCheckbox->setPosition(rightColumnX, startY + spacing);
     fullscreenCheckbox->setCallback([this](bool checked) {
         if (windowReference) {
+            isChangingSettings = true; // Prevent UI recreation during this change
             windowReference->setFullscreen(checked);
+            isChangingSettings = false; // Re-enable UI recreation
         } else {
             std::cout << "Fullscreen " << (checked ? "enabled" : "disabled") << std::endl;
         }
@@ -316,7 +374,11 @@ void SettingsScreen::setupUI(const sf::Font& font) {
     checkboxes.push_back(std::move(fullscreenCheckbox));
     
     // VSync checkbox
-    auto vsyncCheckbox = std::make_unique<UI::Checkbox>("Enable VSync", font, true);
+    bool currentVSyncState = true; // Default
+    if (windowReference) {
+        currentVSyncState = windowReference->isVSyncEnabled();
+    }
+    auto vsyncCheckbox = std::make_unique<UI::Checkbox>("Enable VSync", font, currentVSyncState);
     vsyncCheckbox->setPosition(rightColumnX, startY + spacing + 40);
     vsyncCheckbox->setCallback([this](bool checked) {
         if (windowReference) {
@@ -328,7 +390,11 @@ void SettingsScreen::setupUI(const sf::Font& font) {
     checkboxes.push_back(std::move(vsyncCheckbox));
     
     // Show FPS checkbox
-    auto showFpsCheckbox = std::make_unique<UI::Checkbox>("Show FPS in Title", font, true);
+    bool currentFPSDisplayState = true; // Default
+    if (windowReference) {
+        currentFPSDisplayState = windowReference->isShowingFPS();
+    }
+    auto showFpsCheckbox = std::make_unique<UI::Checkbox>("Show FPS in Title", font, currentFPSDisplayState);
     showFpsCheckbox->setPosition(rightColumnX, startY + spacing + 80);
     showFpsCheckbox->setCallback([this](bool checked) {
         if (windowReference) {
@@ -347,7 +413,9 @@ void SettingsScreen::setupUI(const sf::Font& font) {
     backButton->setCallback([this]() {
         std::cout << "Returning to main menu..." << std::endl;
         if (onScreenChange) {
-            onScreenChange(ScreenType::MainMenu);
+            screenEffects->startFadeOut(1.0f, [this]() {
+                onScreenChange(ScreenType::MainMenu);
+            });
         }
     });
     buttons.push_back(std::move(backButton));
@@ -430,6 +498,31 @@ void SettingsScreen::onEnter() {
 
 void SettingsScreen::setWindowReference(Window* windowRef) {
     windowReference = windowRef;
+    
+    // Setup UI now that we have a proper window reference (if not already done)
+    if (windowReference && storedFont && buttons.empty() && dropdowns.empty()) {
+        setupUI(*storedFont);
+    }
+}
+
+void SettingsScreen::updateWindowSize(sf::Vector2u newSize) {
+    Screen::updateWindowSize(newSize);
+    
+    // Don't recreate UI if we're in the middle of changing settings internally
+    if (isChangingSettings) {
+        return;
+    }
+    
+    // Clear all UI elements and recreate them with new positions
+    buttons.clear();
+    sliders.clear();
+    labels.clear();
+    checkboxes.clear();
+    dropdowns.clear();
+    
+    if (storedFont) {
+        setupUI(*storedFont);
+    }
 }
 
 // ScreenManager implementation
@@ -465,6 +558,15 @@ void ScreenManager::setWindowReference(Window* windowRef) {
             static_cast<SettingsScreen*>(screen.get())->setWindowReference(windowRef);
             break;
         }
+    }
+}
+
+void ScreenManager::updateWindowSize(sf::Vector2u newSize) {
+    windowSize = newSize;
+    
+    // Update all screens with new window size
+    for (auto& screen : screens) {
+        screen->updateWindowSize(newSize);
     }
 }
 
