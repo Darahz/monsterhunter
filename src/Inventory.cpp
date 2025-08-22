@@ -6,7 +6,6 @@ Inventory::~Inventory() {}
 
 void Inventory::drawInventory() {
     for (const auto& item : items) {
-        std::cout << "Drawing item: " << item.getName() << " with value: " << item.getValue() << std::endl;
     }
 }
 

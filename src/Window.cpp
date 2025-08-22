@@ -1,7 +1,7 @@
 #include "../include/Window.h"
 
 Window::Window() : frameCount(0), currentFPS(0.0f), currentSize(WindowSize::SVGA), 
-                 fullscreenMode(false), vsyncEnabled(true), showFPS(true) {
+                 fullscreenMode(false), vsyncEnabled(true), showFPS(true), desiredFramerateLimit(60) {
     loadFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
     lastTime = std::chrono::steady_clock::now();
 }
@@ -36,11 +36,18 @@ bool Window::initialize(WindowSize size) {
     currentSize = size;
     sf::VideoMode videoMode = getVideoModeFromSize(size);
     baseTitle = "Monster Hunter v." + this->getVersion();
-    window.setFramerateLimit(60);
-    window.setVerticalSyncEnabled(vsyncEnabled);
     
     sf::Uint32 style = fullscreenMode ? sf::Style::Fullscreen : sf::Style::Default;
     window.create(videoMode, baseTitle, style);
+    
+    // Set VSync and framerate limit properly (they're mutually exclusive)
+    window.setVerticalSyncEnabled(vsyncEnabled);
+    if (!vsyncEnabled) {
+        window.setFramerateLimit(desiredFramerateLimit);
+    } else {
+        window.setFramerateLimit(0); // Disable framerate limit when VSync is on
+    }
+    
     return window.isOpen();
 }
 
@@ -108,7 +115,11 @@ void Window::changeResolution(WindowSize newSize) {
     
     window.create(videoMode, currentTitle, style);
     window.setVerticalSyncEnabled(vsyncEnabled);
-    window.setFramerateLimit(60); // Keep current framerate limit
+    if (!vsyncEnabled) {
+        window.setFramerateLimit(desiredFramerateLimit);
+    } else {
+        window.setFramerateLimit(0); // Disable framerate limit when VSync is on
+    }
     
     // Restore position if not fullscreen
     if (!fullscreenMode) {
@@ -141,7 +152,11 @@ void Window::setFullscreen(bool fullscreen) {
     
     window.create(videoMode, currentTitle, style);
     window.setVerticalSyncEnabled(vsyncEnabled);
-    window.setFramerateLimit(60);
+    if (!vsyncEnabled) {
+        window.setFramerateLimit(desiredFramerateLimit);
+    } else {
+        window.setFramerateLimit(0); // Disable framerate limit when VSync is on
+    }
     
     // Restore position if switching back to windowed
     if (!fullscreenMode) {
@@ -161,7 +176,18 @@ void Window::setVSync(bool enabled) {
     
     vsyncEnabled = enabled;
     window.setVerticalSyncEnabled(vsyncEnabled);
-    std::cout << "VSync " << (vsyncEnabled ? "enabled" : "disabled") << std::endl;
+    
+    // VSync and framerate limit are mutually exclusive
+    if (vsyncEnabled) {
+        window.setFramerateLimit(0); // Disable framerate limit when VSync is enabled
+    } else {
+        window.setFramerateLimit(desiredFramerateLimit); // Apply stored framerate limit when VSync is disabled
+    }
+    
+    std::cout << "VSync " << (vsyncEnabled ? "enabled" : "disabled");
+    if (!vsyncEnabled) {
+    }
+    std::cout << std::endl;
 }
 
 void Window::setShowFPS(bool show) {
@@ -176,12 +202,18 @@ void Window::setShowFPS(bool show) {
     }
     window.setTitle(title);
     
-    std::cout << "FPS display " << (showFPS ? "enabled" : "disabled") << std::endl;
 }
 
 void Window::setFramerateLimit(int fps) {
-    window.setFramerateLimit(fps);
-    std::cout << "Framerate limit set to: " << fps << std::endl;
+    // Always store the desired framerate limit
+    desiredFramerateLimit = fps;
+    
+    // Only apply framerate limit if VSync is disabled
+    if (!vsyncEnabled) {
+        window.setFramerateLimit(fps);
+        std::cout << "Framerate limit set to: " << fps << std::endl;
+    } else {
+    }
 }
 
 // Getters for current settings
@@ -199,6 +231,10 @@ bool Window::isShowingFPS() const {
 
 WindowSize Window::getCurrentWindowSize() const {
     return currentSize;
+}
+
+int Window::getDesiredFramerateLimit() const {
+    return desiredFramerateLimit;
 }
 
 void Window::setWindowSizeChangeCallback(std::function<void(sf::Vector2u)> callback) {
@@ -269,4 +305,43 @@ int Window::getIndexFromWindowSize(WindowSize size) const {
         case WindowSize::WUXGA:    return 8;
         default:                   return 1; // Fallback to SVGA
     }
+}
+
+int Window::getMaxPracticalFPS() const {
+    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+
+    std::vector<int> commonRefreshRates = {60, 75, 120, 144, 165, 240, 360, 480, 600, 1440, 2400};
+    std::vector<sf::VideoMode> modes = sf::VideoMode::getFullscreenModes();
+    
+    int maxDetectedRefreshRate = 60; // Default fallback
+    
+    for (const auto& mode : modes) {
+        if (mode.width == desktopMode.width && mode.height == desktopMode.height) {
+            for (int rate : commonRefreshRates) {
+                if (rate <= 240) {
+                    maxDetectedRefreshRate = std::max(maxDetectedRefreshRate, rate);
+                }
+            }
+            break;
+        }
+    }
+
+    int practicalMax;
+    if (maxDetectedRefreshRate <= 60) {
+        practicalMax = 300;
+    } else if (maxDetectedRefreshRate <= 75) {
+        practicalMax = 375;
+    } else if (maxDetectedRefreshRate <= 120) {
+        practicalMax = 600;
+    } else if (maxDetectedRefreshRate <= 144) {
+        practicalMax = 720;
+    } else if (maxDetectedRefreshRate <= 240) {
+        practicalMax = 1200;
+    } else {
+        practicalMax = 1440;
+    }
+    
+    std::cout << "Detected max refresh rate: " << maxDetectedRefreshRate << "Hz, setting practical FPS max to: " << practicalMax << std::endl;
+    
+    return practicalMax;
 }

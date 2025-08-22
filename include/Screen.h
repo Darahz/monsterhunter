@@ -10,9 +10,11 @@
 
 // Forward declarations
 class Window;
+class NewGameScreen;
 
 enum class ScreenType {
     MainMenu,
+    NewGame,
     Game,
     Settings,
     Pause

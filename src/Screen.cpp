@@ -1,5 +1,6 @@
 #include "../include/Screen.h"
 #include "../include/Window.h"
+#include "../include/NewGame.h"
 #include <iostream>
 
 // Base Screen class implementation
@@ -115,21 +116,19 @@ MainMenuScreen::MainMenuScreen(sf::Vector2u windowSize, const sf::Font& font)
         backgroundLoaded = true;
         std::cout << "Background image loaded successfully!" << std::endl;
     } else {
-        std::cout << "Failed to load background image: assets/mainmenubg2.png" << std::endl;
     }
 }
 
 void MainMenuScreen::setupButtons(const sf::Font& font) {
     // Start Game button
-    auto startButton = std::make_unique<UI::Button>("Start Game", font, 24);
+    auto startButton = std::make_unique<UI::Button>("New Game", font, 24);
     startButton->setPosition(50, windowSize.y / 2);
     startButton->setBackgroundColor(sf::Color(50, 50, 50));
     startButton->setTextColor(sf::Color::White);
     startButton->setCallback([this]() {
-        std::cout << "Starting game..." << std::endl;
         if (onScreenChange) {
             screenEffects->startFadeOut(1.0f, [this]() {
-                onScreenChange(ScreenType::Game);
+                onScreenChange(ScreenType::NewGame);
             });
         }
     });
@@ -141,7 +140,6 @@ void MainMenuScreen::setupButtons(const sf::Font& font) {
     settingsButton->setBackgroundColor(sf::Color(50, 50, 50));
     settingsButton->setTextColor(sf::Color::White);
     settingsButton->setCallback([this]() {
-        std::cout << "Opening settings..." << std::endl;
         if (onScreenChange) {
             screenEffects->startFadeOut(1.5f, [this]() {
                 onScreenChange(ScreenType::Settings);
@@ -156,7 +154,6 @@ void MainMenuScreen::setupButtons(const sf::Font& font) {
     quitButton->setBackgroundColor(sf::Color(50, 50, 50));
     quitButton->setTextColor(sf::Color::White);
     quitButton->setCallback([this]() {
-        std::cout << "Quitting game..." << std::endl;
         if (onQuit) {
             onQuit();
         }
@@ -183,7 +180,6 @@ void MainMenuScreen::render(sf::RenderWindow& window) {
 void MainMenuScreen::onEnter() {
     Screen::onEnter();
     screenEffects->startFadeIn(2.0f);
-    std::cout << "Entered Main Menu" << std::endl;
 }
 
 void MainMenuScreen::updateWindowSize(sf::Vector2u newSize) {
@@ -209,34 +205,27 @@ void MainMenuScreen::updateBackgroundScale() {
 // GameScreen implementation
 GameScreen::GameScreen(sf::Vector2u windowSize) 
     : Screen(ScreenType::Game, windowSize) {
-    // No weather for game screen by default
     weather->setWeatherType(WeatherType::None);
     weather->startUpdateThread();
 }
 
 void GameScreen::update(float deltaTime) {
     Screen::update(deltaTime);
-    // Add game-specific updates here
 }
 
 void GameScreen::render(sf::RenderWindow& window) {
-    // Game screen background (you can customize this)
     sf::RectangleShape background;
     background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 
                                    static_cast<float>(windowSize.y)));
-    background.setFillColor(sf::Color(20, 40, 60)); // Dark blue background
+    background.setFillColor(sf::Color(20, 40, 60));
     window.draw(background);
 
-    // Game-specific rendering
     Screen::render(window);
-    
-    // Add game objects rendering here
 }
 
 void GameScreen::handleEvent(const sf::Event& event) {
     Screen::handleEvent(event);
     
-    // Handle game-specific events
     if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::Escape) {
             if (onScreenChange) {
@@ -253,13 +242,11 @@ void GameScreen::onEnter() {
 
 void GameScreen::updateWindowSize(sf::Vector2u newSize) {
     Screen::updateWindowSize(newSize);
-    // Game screen uses simple background rectangle, so no additional updates needed
 }
 
 // SettingsScreen implementation
 SettingsScreen::SettingsScreen(sf::Vector2u windowSize, const sf::Font& font, Window* windowRef)
     : Screen(ScreenType::Settings, windowSize), windowReference(windowRef), storedFont(&font), isChangingSettings(false) {
-    // Only setup UI if we have a window reference, otherwise wait for setWindowReference
     if (windowReference) {
         setupUI(font);
     }
@@ -290,14 +277,21 @@ void SettingsScreen::setupUI(const sf::Font& font) {
     fpsLabel->setPosition(50, startY + spacing);
     labels.push_back(std::move(fpsLabel));
     
-    auto fpsSlider = std::make_unique<UI::Slider>(30.0f, 144.0f, 60.0f, font);
+    // Calculate maximum FPS based on system capabilities
+    float maxFPS = 300.0f; // Default fallback
+    float currentFPS = 60.0f; // Default current FPS
+    if (windowReference) {
+        maxFPS = static_cast<float>(windowReference->getMaxPracticalFPS());
+        currentFPS = static_cast<float>(windowReference->getDesiredFramerateLimit());
+    }
+    
+    auto fpsSlider = std::make_unique<UI::Slider>(30.0f, maxFPS, currentFPS, font);
     fpsSlider->setPosition(50, startY + spacing + 25);
     fpsSlider->setSize(300, 10);
     fpsSlider->setCallback([this](float value) {
         if (windowReference) {
             windowReference->setFramerateLimit(static_cast<int>(value));
         } else {
-            std::cout << "FPS Limit set to: " << static_cast<int>(value) << std::endl;
         }
     });
     sliders.push_back(std::move(fpsSlider));
@@ -535,6 +529,7 @@ ScreenManager::ScreenManager(sf::Vector2u windowSize, const sf::Font& font)
 void ScreenManager::setupScreens(const sf::Font& font) {
     // Create all screens
     screens.push_back(std::make_unique<MainMenuScreen>(windowSize, font));
+    screens.push_back(std::make_unique<NewGameScreen>(windowSize, font));
     screens.push_back(std::make_unique<GameScreen>(windowSize));
     screens.push_back(std::make_unique<SettingsScreen>(windowSize, font));
 
