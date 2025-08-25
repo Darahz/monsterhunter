@@ -16,7 +16,7 @@ public:
     virtual ~Creature() = default;
     void listInventory();
     
-    std::vector<std::pair<std::string,int>> getInventoryList() const;
+    std::vector<std::pair<Item,int>> getInventoryList() const;
     
     virtual bool isDead();
     virtual void TakeHealth(int iRemoval);

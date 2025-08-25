@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <algorithm>
 
-Player::Player() {}
+Player::Player() : name("") {}
 
 bool Player::craftItem(std::string itemName){
     auto it = RECIPES.find(itemName);
@@ -38,7 +38,9 @@ bool Player::craftItem(std::string itemName){
     }
 
     // Give the crafted item (1 by default)
-    inventory.addItem(itemName, 1);
+    // For now, create a basic Item with just the name; can be extended to use recipes or a registry
+    Item crafted(itemName, "", 0, false);
+    inventory.addItem(crafted, 1);
     std::cout << "Crafted: " << itemName << "!" << std::endl;
     return true;
 }

@@ -4,12 +4,12 @@
 
 Inventory::Inventory() {}
 
-void Inventory::addItem(std::string name, int num) {
-    name = toFirstUpper(name); // normalize
-    if(this->items.count(name)){
-        this->items[name] += num;
+void Inventory::addItem(const Item& item, int num) {
+    std::string name = toFirstUpper(item.name); // normalize
+    if (this->items.count(name)) {
+        this->items[name].second += num;
     } else {
-        this->items[name] = num;
+        this->items[name] = std::make_pair(item, num);
     }
 }
 
@@ -18,47 +18,51 @@ void Inventory::listItems() const {
         std::cout << "Inventory is empty!" << std::endl;
         return;
     }
-    for (const auto &item : items) {
-        std::cout << item.first << ": " << item.second << std::endl;
+    for (const auto &kv : items) {
+        const Item& item = kv.second.first;
+        int count = kv.second.second;
+        std::cout << item.name << ": x" << count;
+        if (!item.description.empty()) std::cout << " - " << item.description;
+        std::cout << std::endl;
     }
 }
 
-int Inventory::getItemCount(std::string name) const {
-    name = toFirstUpper(name); // normalize
-    if(this->items.count(name)){
-        return this->items.at(name);
+int Inventory::getItemCount(const std::string& name) const {
+    std::string key = toFirstUpper(name);
+    if (this->items.count(key)) {
+        return this->items.at(key).second;
     }
     return 0;
 }
 
-bool Inventory::hasItem(std::string name) const {
-    name = toFirstUpper(name); // normalize
-    return this->items.count(name) > 0 && this->items.at(name) > 0;
+bool Inventory::hasItem(const std::string& name) const {
+    std::string key = toFirstUpper(name);
+    return this->items.count(key) > 0 && this->items.at(key).second > 0;
 }
 
-void Inventory::removeItem(std::string name, int amt) {
-    name = toFirstUpper(name);
-    if (!items.count(name)) return;
-    items[name] -= amt;
-    if (items[name] <= 0) {
-        items.erase(name);
-        if (toFirstUpper(equipped) == name) equipped.clear(); // auto-unequip if gone
+void Inventory::removeItem(const std::string& name, int amt) {
+    std::string key = toFirstUpper(name);
+    if (!items.count(key)) return;
+    items[key].second -= amt;
+    if (items[key].second <= 0) {
+        items.erase(key);
+        if (toFirstUpper(equipped) == key) equipped.clear(); // auto-unequip if gone
     }
 }
 
-std::vector<std::pair<std::string,int>> Inventory::getItemsList() const {
-    std::vector<std::pair<std::string,int>> out;
+std::vector<std::pair<Item, int>> Inventory::getItemsList() const {
+    std::vector<std::pair<Item, int>> out;
     out.reserve(items.size());
     for (const auto &kv : items) {
-        out.emplace_back(kv.first, kv.second);
+        out.emplace_back(kv.second.first, kv.second.second);
     }
     return out;
 }
 
-bool Inventory::equipItem(std::string name) {
+bool Inventory::equipItem(const std::string& name) {
     std::string key = toFirstUpper(name);
     auto it = items.find(key);
-    if (it == items.end() || it->second <= 0) return false;
+    if (it == items.end() || it->second.second <= 0) return false;
     equipped = key; // normalize to lowercase internally
     return true;
 }

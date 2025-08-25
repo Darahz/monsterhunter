@@ -1,8 +1,27 @@
+
 #include "../include/Menu.h"
 #include <iostream>
+#include <functional>
+
 
 Menu::Menu(vector<string> items) {
     this->menuItems = items;
+    this->hasCallbacks = false;
+}
+
+Menu::Menu(vector<pair<string, function<void()>>> itemsWithCallbacks) {
+    this->menuItems.reserve(itemsWithCallbacks.size());
+    this->callbacks.reserve(itemsWithCallbacks.size());
+    for (auto &p : itemsWithCallbacks) {
+        this->menuItems.push_back(p.first);
+        this->callbacks.push_back(p.second);
+    }
+    this->hasCallbacks = true;
+}
+void Menu::Select() {
+    if (hasCallbacks && selectedIndex >= 0 && selectedIndex < (int)callbacks.size()) {
+        callbacks[selectedIndex]();
+    }
 }
 
 void Menu::DisplayItems() {

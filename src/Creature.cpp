@@ -8,7 +8,7 @@ void Creature::listInventory() {
     inventory.listItems(); 
 }
 
-std::vector<std::pair<std::string,int>> Creature::getInventoryList() const { 
+std::vector<std::pair<Item,int>> Creature::getInventoryList() const { 
     return inventory.getItemsList(); 
 }
 
